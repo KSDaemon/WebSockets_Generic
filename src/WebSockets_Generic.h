@@ -362,6 +362,7 @@ void __throw_bad_function_call()
 #define NETWORK_ESP32_ASYNC               (15)
 
 #define NETWORK_RP2040W_WIFI              (16)
+#define NETWORK_ETHERNET                  (17)
 
 ////////////////////////////////////////
 
@@ -762,6 +763,20 @@ void __throw_bad_function_call()
   #define WEBSOCKETS_NETWORK_CLASS            WiFiClient
   #define WEBSOCKETS_NETWORK_SSL_CLASS        WiFiClientSecure
   #define WEBSOCKETS_NETWORK_SERVER_CLASS     WiFiServer
+
+  ////////////////////////////////////////
+
+#elif (WEBSOCKETS_NETWORK_TYPE == NETWORK_ETHERNET)
+
+  #include <Ethernet.h>
+
+  #if(_WEBSOCKETS_LOGLEVEL_>3)
+    #warning Using Ethernet Library
+  #endif
+
+  #define WEBSOCKETS_NETWORK_CLASS          EthernetClient
+  //#define WEBSOCKETS_NETWORK_SSL_CLASS      EthernetSSLClient
+  #define WEBSOCKETS_NETWORK_SERVER_CLASS   EthernetServer
 
   ////////////////////////////////////////
 
