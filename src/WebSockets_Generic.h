@@ -146,7 +146,6 @@ void __throw_bad_function_call()
 #define WEBSOCKETS_MAX_DATA_SIZE (15 * 1024)
 
 // moves all Header strings to Flash (~300 Byte)
-//#define WEBSOCKETS_USE_BIG_MEM
 #define WEBSOCKETS_SAVE_RAM
 //#define GET_FREE_HEAP System.freeMemory()
 #define WEBSOCKETS_YIELD()
@@ -350,8 +349,6 @@ void __throw_bad_function_call()
 #endif
 
 #define WEBSOCKETS_NETWORK_TYPE NETWORK_ESP8266
-//#define WEBSOCKETS_NETWORK_TYPE NETWORK_ESP8266_ASYNC
-//#define WEBSOCKETS_NETWORK_TYPE NETWORK_W5100
 
 #elif defined(ESP32)
 //KH
@@ -360,8 +357,6 @@ void __throw_bad_function_call()
 #endif
 
 #define WEBSOCKETS_NETWORK_TYPE NETWORK_ESP32
-//#define WEBSOCKETS_NETWORK_TYPE NETWORK_ESP32_ETH
-//#define WEBSOCKETS_NETWORK_TYPE NETWORK_ESP32_ASYNC
 
 #elif ( defined(NRF52840_FEATHER) || defined(NRF52832_FEATHER) || defined(NRF52_SERIES) || defined(ARDUINO_NRF52_ADAFRUIT) || \
           defined(NRF52840_FEATHER_SENSE) || defined(NRF52840_ITSYBITSY) || defined(NRF52840_CIRCUITPLAY) || defined(NRF52840_CLUE) || \
