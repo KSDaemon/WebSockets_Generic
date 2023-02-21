@@ -79,10 +79,8 @@ class WebSocketsClient : protected WebSockets
     void beginSSL(const char * host, const uint16_t& port, const char * url = "/", const char * fingerprint = "",
                   const char * protocol = "arduino");
 
-    // KH
     void beginSSL(const IPAddress& host, const uint16_t& port, const String& url = "/", const String& fingerprint = "",
                   const String& protocol = "arduino");
-    //////
 
     void beginSSL(const String& host, const uint16_t& port, const String& url = "/", const String& fingerprint = "",
                   const String& protocol = "arduino");
@@ -92,10 +90,8 @@ class WebSocketsClient : protected WebSockets
     void beginSSL(const char * host, const uint16_t& port, const char * url = "/", const uint8_t * fingerprint = NULL,
                   const char * protocol = "arduino");
 
-    // KH
     void beginSSL(const IPAddress& host, const uint16_t& port, const String& url = "/", const String& fingerprint = "",
                   const String& protocol = "arduino");
-    //////
 
     void beginSslWithCA(const char * host, const uint16_t& port, const char * url = "/", BearSSL::X509List * CA_cert = NULL,
                         const char * protocol = "arduino");
@@ -104,7 +100,6 @@ class WebSocketsClient : protected WebSockets
     void setSSLClientCertKey(BearSSL::X509List * clientCert = NULL, BearSSL::PrivateKey * clientPrivateKey = NULL);
 
     void setSSLClientCertKey(const char * clientCert = NULL, const char * clientPrivateKey = NULL);
-    //////
 
 #endif    // SSL_AXTLS
 
@@ -119,10 +114,8 @@ class WebSocketsClient : protected WebSockets
     void beginSocketIO(const String& host, const uint16_t& port, const String& url = "/socket.io/?EIO=4",
                        const String& protocol = "arduino");
 
-    // KH
     void beginSocketIO(const IPAddress& host, const uint16_t& port, const String& url = "/socket.io/?EIO=4",
                        const String& protocol = "arduino");
-    //////
 
 #if defined(HAS_SSL)
     void beginSocketIOSSL(const char * host, const uint16_t& port, const char * url = "/socket.io/?EIO=4",
@@ -131,10 +124,8 @@ class WebSocketsClient : protected WebSockets
     void beginSocketIOSSL(const String& host, const uint16_t& port, const String& url = "/socket.io/?EIO=4",
                           const String& protocol = "arduino");
 
-    // KH
     void beginSocketIOSSL(const IPAddress& host, const uint16_t& port, const String& url = "/socket.io/?EIO=4",
                           const String& protocol = "arduino");
-    //////
 
     void beginSocketIOSSLWithCA(const char * host, const uint16_t& port, const char * url = "/socket.io/?EIO=4",
                                 const char * CA_cert = NULL, const char * protocol = "arduino");
@@ -214,7 +205,7 @@ class WebSocketsClient : protected WebSockets
     unsigned long _reconnectInterval;
     unsigned long _lastHeaderSent;
 
-    void messageReceived(WSclient_t * client, WSopcode_t opcode, uint8_t * payload, size_t length, bool fin);
+    void messageReceived(WSclient_t * client, WSopcode_t opcode, uint8_t * payload, size_t length, bool fin) override;
 
     void clientDisconnect(WSclient_t * client);
     bool clientIsConnected(WSclient_t * client);

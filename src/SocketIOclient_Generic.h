@@ -52,13 +52,9 @@
 #ifndef SOCKET_IO_CLIENT_GENERIC_H_
 #define SOCKET_IO_CLIENT_GENERIC_H_
 
-////////////////////////////////////////
-
 #if !defined(USING_STICKY_SESSION_SIO)
   #define USING_STICKY_SESSION_SIO          false
 #endif
-
-////////////////////////////////////////
 
 #if !defined(SIO_PING_INTERVAL)
   #define SIO_PING_INTERVAL                     60000L
@@ -72,12 +68,8 @@
   #define SIO_DISCONNECT_TIMEOUT_COUNT          5
 #endif
 
-////////////////////////////////////////
-
 #include "WebSockets_Generic.h"
 #include "WebSocketsClient_Generic.h"
-
-////////////////////////////////////////
 
 #if !defined(EIO_HEARTBEAT_INTERVAL)
   #define EIO_HEARTBEAT_INTERVAL          20000
@@ -86,7 +78,6 @@
 #define EIO_MAX_HEADER_SIZE (WEBSOCKETS_MAX_HEADER_SIZE + 1)
 #define SIO_MAX_HEADER_SIZE (EIO_MAX_HEADER_SIZE + 1)
 
-////////////////////////////////////////
 
 typedef enum
 {
@@ -99,7 +90,6 @@ typedef enum
   eIOtype_NOOP    = '6',    ///< A noop packet. Used primarily to force a poll cycle when an incoming websocket connection is received.
 } engineIOmessageType_t;
 
-////////////////////////////////////////
 
 typedef enum
 {
@@ -114,8 +104,6 @@ typedef enum
   sIOtype_PONG         = '8',
 } socketIOmessageType_t;
 
-////////////////////////////////////////
-////////////////////////////////////////
 
 class SocketIOclient : protected WebSocketsClient
 {
@@ -178,15 +166,10 @@ class SocketIOclient : protected WebSocketsClient
 
     void configureEIOping(bool disableHeartbeat = false);
 
-    ////////////////////////////////////////
-
-    // KH, add v2.5.1
     inline void setReconnectInterval(const unsigned long& time)
     {
       _reconnectInterval = time;
     }
-
-    ////////////////////////////////////////
 
     inline void setExtraHeaders(const char * extraHeaders = nullptr)
     {
@@ -196,9 +179,6 @@ class SocketIOclient : protected WebSocketsClient
   protected:
     bool _disableHeartbeat  = false;
     uint64_t _lastHeartbeat = 0;
-    SocketIOclientEvent _cbEvent;
-
-    ////////////////////////////////////////
 
     virtual void runIOCbEvent(socketIOmessageType_t type, uint8_t * payload, size_t length)
     {
@@ -208,11 +188,7 @@ class SocketIOclient : protected WebSocketsClient
       }
     }
 
-    ////////////////////////////////////////
-
     void initClient();
-
-    ////////////////////////////////////////
 
     // Handling events from websocket layer
     virtual void runCbEvent(WStype_t type, uint8_t * payload, size_t length)
@@ -220,12 +196,8 @@ class SocketIOclient : protected WebSocketsClient
       handleCbEvent(type, payload, length);
     }
 
-    ////////////////////////////////////////
-
     void handleCbEvent(WStype_t type, uint8_t * payload, size_t length);
 };
-
-////////////////////////////////////////
 
 #include "SocketIOclient_Generic-Impl.h"
 

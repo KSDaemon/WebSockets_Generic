@@ -132,9 +132,7 @@ class WebSocketsServerCore : protected WebSockets
 
   protected:
 
-    // KH Debug
     uint8_t currentActiveClient = 0xFF;
-    //////
 
     String _origin;
     String _protocol;
@@ -173,7 +171,7 @@ class WebSocketsServerCore : protected WebSockets
     */
     virtual void handleNonWebsocketConnection(WSclient_t * client)
     {
-      WSK_LOGDEBUG1("[WS-Server handleHeader] no Websocket connection close. Client =", client->num);
+      WS_LOGDEBUG2("[WS-Server handleHeader] no Websocket connection close. Client =", client->num);
 
       client->tcp->write(
         "HTTP/1.1 400 Bad Request\r\n"
@@ -283,14 +281,9 @@ class WebSocketsServer : public WebSocketsServerCore
     void handleNewClients();
 #endif
 
-    // KH Debug
-    uint8_t currentActiveClient = 0xFF;
-    //////
-
     uint16_t _port;
     WEBSOCKETS_NETWORK_SERVER_CLASS * _server;
 };
-
 
 #include "WebSocketsServer_Generic-Impl.h"
 

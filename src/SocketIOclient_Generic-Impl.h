@@ -54,19 +54,13 @@
 
 #include "WebSocketsClient_Generic.h"
 
-////////////////////////////////////////
-
 SocketIOclient::SocketIOclient()
 {
 }
 
-////////////////////////////////////////
-
 SocketIOclient::~SocketIOclient()
 {
 }
-
-////////////////////////////////////////
 
 void SocketIOclient::begin(const char * host, const uint16_t& port, const char * url, const char * protocol)
 {
@@ -75,16 +69,12 @@ void SocketIOclient::begin(const char * host, const uint16_t& port, const char *
   initClient();
 }
 
-////////////////////////////////////////
-
 void SocketIOclient::begin(const String& host, const uint16_t& port, const String& url, const String& protocol)
 {
   WebSocketsClient::beginSocketIO(host, port, url, protocol);
   WebSocketsClient::enableHeartbeat(SIO_PING_INTERVAL, SIO_PONG_TIMEOUT, SIO_DISCONNECT_TIMEOUT_COUNT);
   initClient();
 }
-
-////////////////////////////////////////
 
 void SocketIOclient::begin(const IPAddress& host, const uint16_t& port, const String& url, const String& protocol)
 {
@@ -93,11 +83,7 @@ void SocketIOclient::begin(const IPAddress& host, const uint16_t& port, const St
   initClient();
 }
 
-////////////////////////////////////////
-
 #if defined(HAS_SSL)
-
-////////////////////////////////////////
 
 void SocketIOclient::beginSSL(const char * host, const uint16_t& port, const char * url, const char * protocol)
 {
@@ -106,7 +92,6 @@ void SocketIOclient::beginSSL(const char * host, const uint16_t& port, const cha
   initClient();
 }
 
-////////////////////////////////////////
 
 void SocketIOclient::beginSSL(const String& host, const uint16_t& port, const String& url, const String& protocol)
 {
@@ -115,11 +100,7 @@ void SocketIOclient::beginSSL(const String& host, const uint16_t& port, const St
   initClient();
 }
 
-////////////////////////////////////////
-
 #if defined(SSL_BARESSL)
-
-////////////////////////////////////////
 
 void SocketIOclient::beginSSLWithCA(const char * host, const uint16_t& port, const char * url,
                                     const char * CA_cert, const char * protocol)
@@ -129,8 +110,6 @@ void SocketIOclient::beginSSLWithCA(const char * host, const uint16_t& port, con
   initClient();
 }
 
-////////////////////////////////////////
-
 void SocketIOclient::beginSSLWithCA(const char * host, const uint16_t& port, const char * url,
                                     BearSSL::X509List * CA_cert, const char * protocol)
 {
@@ -139,44 +118,32 @@ void SocketIOclient::beginSSLWithCA(const char * host, const uint16_t& port, con
   initClient();
 }
 
-////////////////////////////////////////
-
 void SocketIOclient::setSSLClientCertKey(const char * clientCert, const char * clientPrivateKey)
 {
   WebSocketsClient::setSSLClientCertKey(clientCert, clientPrivateKey);
 }
-
-////////////////////////////////////////
 
 void SocketIOclient::setSSLClientCertKey(BearSSL::X509List * clientCert, BearSSL::PrivateKey * clientPrivateKey)
 {
   WebSocketsClient::setSSLClientCertKey(clientCert, clientPrivateKey);
 }
 
-////////////////////////////////////////
-
 #endif    // #if defined(SSL_BARESSL)
 #endif    // #if defined(HAS_SSL)
-
-////////////////////////////////////////
 
 void SocketIOclient::configureEIOping(bool disableHeartbeat)
 {
   _disableHeartbeat = disableHeartbeat;
 }
 
-////////////////////////////////////////
-
 void SocketIOclient::initClient()
 {
   if (_client.cUrl.indexOf("EIO=4") != -1)
   {
-    WSK_LOGINFO("[wsIOc] found EIO=4 disable EIO ping on client");
+    WS_LOGINFO("[wsIOc] found EIO=4 disable EIO ping on client");
     configureEIOping(true);
   }
 }
-
-////////////////////////////////////////
 
 /**
    set callback function
@@ -187,14 +154,11 @@ void SocketIOclient::onEvent(SocketIOclientEvent cbEvent)
   _cbEvent = cbEvent;
 }
 
-////////////////////////////////////////
-
 bool SocketIOclient::isConnected()
 {
   return WebSocketsClient::isConnected();
 }
 
-////////////////////////////////////////
 
 /**
    send text data to client
@@ -245,35 +209,25 @@ bool SocketIOclient::send(socketIOmessageType_t type, uint8_t * payload, size_t 
   return false;
 }
 
-////////////////////////////////////////
-
 bool SocketIOclient::send(socketIOmessageType_t type, const uint8_t * payload, size_t length)
 {
   return send(type, (uint8_t *)payload, length);
 }
-
-////////////////////////////////////////
 
 bool SocketIOclient::send(socketIOmessageType_t type, char * payload, size_t length, bool headerToPayload)
 {
   return send(type, (uint8_t *)payload, length, headerToPayload);
 }
 
-////////////////////////////////////////
-
 bool SocketIOclient::send(socketIOmessageType_t type, const char * payload, size_t length)
 {
   return send(type, (uint8_t *)payload, length);
 }
 
-////////////////////////////////////////
-
 bool SocketIOclient::send(socketIOmessageType_t type, const String& payload)
 {
   return send(type, (uint8_t *)payload.c_str(), payload.length());
 }
-
-////////////////////////////////////////
 
 /**
    send text data to client
@@ -288,35 +242,25 @@ bool SocketIOclient::sendEVENT(uint8_t * payload, size_t length, bool headerToPa
   return send(sIOtype_EVENT, payload, length, headerToPayload);
 }
 
-////////////////////////////////////////
-
 bool SocketIOclient::sendEVENT(const uint8_t * payload, size_t length)
 {
   return sendEVENT((uint8_t *)payload, length);
 }
-
-////////////////////////////////////////
 
 bool SocketIOclient::sendEVENT(char * payload, size_t length, bool headerToPayload)
 {
   return sendEVENT((uint8_t *)payload, length, headerToPayload);
 }
 
-////////////////////////////////////////
-
 bool SocketIOclient::sendEVENT(const char * payload, size_t length)
 {
   return sendEVENT((uint8_t *)payload, length);
 }
 
-////////////////////////////////////////
-
 bool SocketIOclient::sendEVENT(const String& payload)
 {
   return sendEVENT((uint8_t *)payload.c_str(), payload.length());
 }
-
-////////////////////////////////////////
 
 void SocketIOclient::loop()
 {
@@ -326,12 +270,10 @@ void SocketIOclient::loop()
   if (!_disableHeartbeat && (t - _lastHeartbeat) > EIO_HEARTBEAT_INTERVAL)
   {
     _lastHeartbeat = t;
-    WSK_LOGINFO("[wsIOc] send ping\n");
+    WS_LOGINFO("[wsIOc] send ping\n");
     WebSocketsClient::sendTXT(eIOtype_PING);
   }
 }
-
-////////////////////////////////////////
 
 void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t length)
 {
@@ -340,13 +282,13 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
     case WStype_DISCONNECTED:
       runIOCbEvent(sIOtype_DISCONNECT, NULL, 0);
 
-      WSK_LOGINFO("[wsIOc] Disconnected!");
+      WS_LOGINFO("[wsIOc] Disconnected!");
 
       break;
 
     case WStype_CONNECTED:
     {
-      WSK_LOGWARN1("[wsIOc] Connected to url:", (char *) payload);
+      WS_LOGWARN2("[wsIOc] Connected to url:", (char *) payload);
 
       // send message to server when Connected
       // Engine.io upgrade confirmation message (required)
@@ -371,7 +313,7 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
         case eIOtype_PING:
           payload[0] = eIOtype_PONG;
 
-          WSK_LOGWARN1("[wsIOc] get ping send pong:", (char *) payload);
+          WS_LOGWARN2("[wsIOc] get ping send pong:", (char *) payload);
 
           WebSocketsClient::sendTXT(payload, length, false);
           runIOCbEvent(sIOtype_PING, payload, length);
@@ -379,7 +321,7 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
           break;
 
         case eIOtype_PONG:
-          WSK_LOGWARN("[wsIOc] get pong");
+          WS_LOGWARN("[wsIOc] get pong");
           runIOCbEvent(sIOtype_PONG, payload, length);
 
           break;
@@ -398,14 +340,14 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
           switch (ioType)
           {
             case sIOtype_EVENT:
-              WSK_LOGWARN1("[wsIOc] get event: len = ", lData);
-              WSK_LOGWARN1("[wsIOc] get data: ", (char *) data);
+              WS_LOGWARN2("[wsIOc] get event: len = ", lData);
+              WS_LOGWARN2("[wsIOc] get data: ", (char *) data);
 
               break;
 
             case sIOtype_CONNECT:
-              WSK_LOGWARN1("[wsIOc] connected: len = ", lData);
-              WSK_LOGWARN1("[wsIOc] data: ", (char *) data);
+              WS_LOGWARN2("[wsIOc] connected: len = ", lData);
+              WS_LOGWARN2("[wsIOc] data: ", (char *) data);
 
               return;
 
@@ -415,8 +357,8 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
             case sIOtype_BINARY_EVENT:
             case sIOtype_BINARY_ACK:
             default:
-              WSK_LOGINFO1("[wsIOc] Socket.IO Message Type is not implemented:", ioType);
-              WSK_LOGWARN1("[wsIOc] get text:", (char *) payload);
+              WS_LOGINFO2("[wsIOc] Socket.IO Message Type is not implemented:", ioType);
+              WS_LOGWARN2("[wsIOc] get text:", (char *) payload);
 
               break;
           }
@@ -431,8 +373,8 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
         case eIOtype_UPGRADE:
         case eIOtype_NOOP:
         default:
-          WSK_LOGINFO1("[wsIOc] Socket.IO Message Type is not implemented:", eType);
-          WSK_LOGWARN1("[wsIOc] get text:", (char *) payload);
+          WS_LOGINFO2("[wsIOc] Socket.IO Message Type is not implemented:", eType);
+          WS_LOGWARN2("[wsIOc] get text:", (char *) payload);
 
           break;
       }
@@ -451,8 +393,6 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t * payload, size_t leng
       break;
   }
 }
-
-////////////////////////////////////////
 
 #endif    // SOCKET_IO_CLIENT_GENERIC_IMPL_H_
 

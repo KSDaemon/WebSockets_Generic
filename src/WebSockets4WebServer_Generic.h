@@ -57,22 +57,15 @@
 
 #if WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266 && WEBSERVER_HAS_HOOK
 
-////////////////////////////////////////
-////////////////////////////////////////
-
 class WebSockets4WebServer : public WebSocketsServerCore
 {
   public:
-
-    ////////////////////////////////////////
 
     WebSockets4WebServer(const String & origin = "", const String & protocol = "arduino")
       : WebSocketsServerCore(origin, protocol)
     {
       begin();
     }
-
-    ////////////////////////////////////////
 
     ESP8266WebServer::HookFunction hookForWebserver(const String & wsRootDir, WebSocketServerEvent event)
     {
@@ -110,9 +103,6 @@ class WebSockets4WebServer : public WebSocketsServerCore
     }
 };
 
-////////////////////////////////////////
-////////////////////////////////////////
-
 #else    // WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266 && WEBSERVER_HAS_HOOK
 
 #ifndef WEBSERVER_HAS_HOOK
@@ -122,7 +112,5 @@ class WebSockets4WebServer : public WebSocketsServerCore
 #endif
 
 #endif    // WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266 && WEBSERVER_HAS_HOOK
-
-////////////////////////////////////////
 
 #endif    // __WEBSOCKETS4WEBSERVER_GENERIC_H

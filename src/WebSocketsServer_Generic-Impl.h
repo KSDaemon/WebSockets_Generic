@@ -126,7 +126,7 @@ void WebSocketsServerCore::begin()
 
   _runnning = true;
 
-  WSK_LOGDEBUG(WEBSOCKETS_GENERIC_VERSION);
+  WS_LOGDEBUG(WEBSOCKETS_GENERIC_VERSION);
 }
 
 void WebSocketsServerCore::close()
@@ -584,11 +584,11 @@ WSclient_t * WebSocketsServerCore::newClient(WEBSOCKETS_NETWORK_CLASS * TCPclien
       IPAddress ip = client->tcp->remoteIP();
 
       // KH New debug
-      WSK_LOGDEBUG3("ESP New Client :", client->num, ", IP =", ip);
+      WS_LOGDEBUG4("ESP New Client :", client->num, ", IP =", ip);
 #endif
 #else
       // KH New debug
-      WSK_LOGDEBUG1("New Client :", client->num);
+      WS_LOGDEBUG2("New Client :", client->num);
 #endif
 
 #if (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC)
@@ -596,7 +596,7 @@ WSclient_t * WebSocketsServerCore::newClient(WEBSOCKETS_NETWORK_CLASS * TCPclien
       client->tcp->onDisconnect(std::bind([](WebSocketsServerCore * server, AsyncTCPbuffer * obj,
                                              WSclient_t * client) -> bool
       {
-        WSK_LOGDEBUG1("Disconnect Client :", client->num);
+        WS_LOGDEBUG2("Disconnect Client :", client->num);
 
         AsyncTCPbuffer ** sl = &server->_clients[client->num].tcp;
 
@@ -743,8 +743,8 @@ void WebSocketsServerCore::clientDisconnect(WSclient_t * client)
   client->status = WSC_NOT_CONNECTED;
 
   // KH New debug
-  WSK_LOGDEBUG1("Disconnected Client :", client->num);
-  //WSK_LOGINFO1("Disconnected Client :", client->num);
+  WS_LOGDEBUG2("Disconnected Client :", client->num);
+  //WS_LOGINFO2("Disconnected Client :", client->num);
 
   runCbEvent(client->num, WStype_DISCONNECTED, NULL, 0);
 }
@@ -773,7 +773,7 @@ bool WebSocketsServerCore::clientIsConnected(WSclient_t * client)
     // client lost
     if (client->status != WSC_NOT_CONNECTED)
     {
-      WSK_LOGDEBUG1("Clean up : Connection lost. Client :", client->num );
+      WS_LOGDEBUG2("Clean up : Connection lost. Client :", client->num );
       // do cleanup
       clientDisconnect(client);
     }
@@ -782,7 +782,7 @@ bool WebSocketsServerCore::clientIsConnected(WSclient_t * client)
   if (client->tcp)
   {
     // do cleanup
-    WSK_LOGDEBUG1("[WS-Server] client->tcp, client list cleanup 2. Client :", client->num);
+    WS_LOGDEBUG2("[WS-Server] client->tcp, client list cleanup 2. Client :", client->num);
     clientDisconnect(client);
   }
 
@@ -805,10 +805,10 @@ WSclient_t * WebSocketsServerCore::handleNewClient(WEBSOCKETS_NETWORK_CLASS * tc
 #ifndef NODEBUG_WEBSOCKETS
     IPAddress ip = tcpClient->remoteIP();
 
-    WSK_LOGERROR1("[WS-Server][handleNewClient] No free space for new client from", ip);
+    WS_LOGERROR2("[WS-Server][handleNewClient] No free space for new client from", ip);
 #endif
 #else
-    WSK_LOGERROR("[WS-Server][handleNewClient] No free space new client");
+    WS_LOGERROR("[WS-Server][handleNewClient] No free space new client");
 #endif
 
     // no client! => create dummy!
@@ -841,7 +841,7 @@ void WebSocketsServer::handleNewClients()
 
     if (!tcpClient)
     {
-      WSK_LOGERROR("[WS-Server][handleNewClients] Creating Network class failed!");
+      WS_LOGERROR("[WS-Server][handleNewClients] Creating Network class failed!");
 
       return;
     }
@@ -880,19 +880,19 @@ void WebSocketsServerCore::handleClientData()
       if (len > 0)
       {
         // KH New
-        WSK_LOGINFO3("[handleClientData] Client:", client->num, ", tcp->available len:", len);
+        WS_LOGINFO4("[handleClientData] Client:", client->num, ", tcp->available len:", len);
 
         switch (client->status)
         {
           case WSC_HEADER:
           {
             // KH New
-            WSK_LOGINFO1(client->num, "[handleClientData] =================== Start =======================");
+            WS_LOGINFO2(client->num, "[handleClientData] =================== Start =======================");
 
             String headerLine = client->tcp->readStringUntil('\n');
 
             // KH New
-            WSK_LOGINFO3("[handleClientData] Status WSC_HEADER. Client:", client->num, ", headerLine:", headerLine);
+            WS_LOGINFO4("[handleClientData] Status WSC_HEADER. Client:", client->num, ", headerLine:", headerLine);
             // KH Debug
             //if ( client->cHttpHeadersValid )
             {
@@ -903,14 +903,14 @@ void WebSocketsServerCore::handleClientData()
             currentActiveClient = client->num;
 
             // KH New
-            WSK_LOGINFO1(client->num, "[handleClientData] =================== End =======================");
+            WS_LOGINFO2(client->num, "[handleClientData] =================== End =======================");
           }
 
           break;
 
           case WSC_CONNECTED:
             // KH New
-            WSK_LOGINFO1("[handleClientData] Status WSC_CONNECTED. handleWebsocket. Client:", client->num);
+            WS_LOGINFO2("[handleClientData] Status WSC_CONNECTED. handleWebsocket. Client:", client->num);
 
             WebSockets::handleWebsocket(client);
 
@@ -918,7 +918,7 @@ void WebSocketsServerCore::handleClientData()
 
           default:
             // KH New
-            WSK_LOGINFO3("[handleClientData] default: clientDisconnect. Client:", client->num,
+            WS_LOGINFO4("[handleClientData] default: clientDisconnect. Client:", client->num,
                          "unknown client status", client->status);
             WebSockets::clientDisconnect(client, 1002);
 
@@ -965,18 +965,18 @@ void WebSocketsServerCore::handleHeader(WSclient_t * client, String& headerLine)
 {
   static const char * NEW_LINE = "\r\n";
 
-  //WSK_LOGINFO3("[handleHeader] Client:", client->num, ", RX before trim:", headerLine.c_str());
+  //WS_LOGINFO4("[handleHeader] Client:", client->num, ", RX before trim:", headerLine.c_str());
 
   headerLine.trim();    // remove \r
 
-  //WSK_LOGINFO3("[handleHeader] Client:", client->num, ", RX after trim:", headerLine.c_str());
+  //WS_LOGINFO4("[handleHeader] Client:", client->num, ", RX after trim:", headerLine.c_str());
 
   if (headerLine.length() > 0)
   {
-    WSK_LOGINFO3("[handleHeader] Client:", client->num, ", RX:", headerLine.c_str());
+    WS_LOGINFO4("[handleHeader] Client:", client->num, ", RX:", headerLine.c_str());
 
     //KH New
-    WSK_LOGINFO1("[handleHeader] RX: HeaderLine Len =", headerLine.length());
+    WS_LOGINFO2("[handleHeader] RX: HeaderLine Len =", headerLine.length());
 
     // websocket requests always start with GET see rfc6455
     if (headerLine.startsWith("GET "))
@@ -985,7 +985,7 @@ void WebSocketsServerCore::handleHeader(WSclient_t * client, String& headerLine)
       client->cUrl = headerLine.substring(4, headerLine.indexOf(' ', 4));
 
       //KH New
-      WSK_LOGINFO1("[handleHeader] RX: client->cUrl =", client->cUrl);
+      WS_LOGINFO2("[handleHeader] RX: client->cUrl =", client->cUrl);
 
       //reset non-websocket http header validation state for this client
       client->cHttpHeadersValid      = true;
@@ -1052,7 +1052,7 @@ void WebSocketsServerCore::handleHeader(WSclient_t * client, String& headerLine)
     }
     else
     {
-      WSK_LOGINFO1("[handleHeader] Header error. RX:", headerLine.c_str());
+      WS_LOGINFO2("[handleHeader] Header error. RX:", headerLine.c_str());
     }
 
     headerLine = "";
@@ -1064,17 +1064,17 @@ void WebSocketsServerCore::handleHeader(WSclient_t * client, String& headerLine)
   }
   else
   {
-    WSK_LOGINFO1(client->num, "Header read fin.");
-    WSK_LOGINFO2(client->num, "   - cURL:",                    client->cUrl.c_str());
-    WSK_LOGINFO2(client->num, "   - cIsUpgrade:",              client->cIsUpgrade);
-    WSK_LOGINFO2(client->num, "   - cIsWebsocket:",            client->cIsWebsocket);
-    WSK_LOGINFO2(client->num, "   - cKey:",                    client->cKey.c_str());
-    WSK_LOGINFO2(client->num, "   - cProtocol:",               client->cProtocol.c_str());
-    WSK_LOGINFO2(client->num, "   - cExtensions:",             client->cExtensions.c_str());
-    WSK_LOGINFO2(client->num, "   - cVersion:",                client->cVersion);
-    WSK_LOGINFO2(client->num, "   - base64Authorization:",     client->base64Authorization.c_str());
-    WSK_LOGINFO2(client->num, "   - cHttpHeadersValid:",       client->cHttpHeadersValid);
-    WSK_LOGINFO2(client->num, "   - cMandatoryHeadersCount:",  client->cMandatoryHeadersCount);
+    WS_LOGINFO2(client->num, "Header read fin.");
+    WS_LOGINFO3(client->num, "   - cURL:",                    client->cUrl.c_str());
+    WS_LOGINFO3(client->num, "   - cIsUpgrade:",              client->cIsUpgrade);
+    WS_LOGINFO3(client->num, "   - cIsWebsocket:",            client->cIsWebsocket);
+    WS_LOGINFO3(client->num, "   - cKey:",                    client->cKey.c_str());
+    WS_LOGINFO3(client->num, "   - cProtocol:",               client->cProtocol.c_str());
+    WS_LOGINFO3(client->num, "   - cExtensions:",             client->cExtensions.c_str());
+    WS_LOGINFO3(client->num, "   - cVersion:",                client->cVersion);
+    WS_LOGINFO3(client->num, "   - base64Authorization:",     client->base64Authorization.c_str());
+    WS_LOGINFO3(client->num, "   - cHttpHeadersValid:",       client->cHttpHeadersValid);
+    WS_LOGINFO3(client->num, "   - cMandatoryHeadersCount:",  client->cMandatoryHeadersCount);
 
     bool ok = (client->cIsUpgrade && client->cIsWebsocket);
 
@@ -1113,7 +1113,7 @@ void WebSocketsServerCore::handleHeader(WSclient_t * client, String& headerLine)
 
       if (auth != client->base64Authorization)
       {
-        WSK_LOGDEBUG1("[handleHeader] HTTP Authorization failed! Client:", client->num);
+        WS_LOGDEBUG2("[handleHeader] HTTP Authorization failed! Client:", client->num);
 
         handleAuthorizationFailed(client);
         return;
@@ -1122,12 +1122,12 @@ void WebSocketsServerCore::handleHeader(WSclient_t * client, String& headerLine)
 
     if (ok)
     {
-      WSK_LOGDEBUG1("[handleHeader] Websocket connection incoming. Client:", client->num);
+      WS_LOGDEBUG2("[handleHeader] Websocket connection incoming. Client:", client->num);
 
       // generate Sec-WebSocket-Accept key
       String sKey = acceptKey(client->cKey);
 
-      WSK_LOGDEBUG2(client->num, "[handleHeader]  - sKey:", sKey.c_str());
+      WS_LOGDEBUG3(client->num, "[handleHeader]  - sKey:", sKey.c_str());
 
       client->status = WSC_CONNECTED;
 
@@ -1156,7 +1156,7 @@ void WebSocketsServerCore::handleHeader(WSclient_t * client, String& headerLine)
       // header end
       handshake += NEW_LINE;
 
-      WSK_LOGDEBUG3("[handleHeader] Client:", client->num, ", handshake:", (char *)handshake.c_str());
+      WS_LOGDEBUG4("[handleHeader] Client:", client->num, ", handshake:", (char *)handshake.c_str());
 
       write(client, (uint8_t *)handshake.c_str(), handshake.length());
 
@@ -1189,7 +1189,7 @@ void WebSocketsServerCore::handleHBPing(WSclient_t * client)
 
   if (pi > client->pingInterval)
   {
-    WSK_LOGDEBUG1("[handleHeader] Sending HB ping to Client:", client->num);
+    WS_LOGDEBUG2("[handleHeader] Sending HB ping to Client:", client->num);
 
     if (sendPing(client->num))
     {
@@ -1238,9 +1238,6 @@ void WebSocketsServerCore::disableHeartbeat()
 }
 
 
-////////////////////
-// WebSocketServer
-
 /**
    called to initialize the Websocket server
 */
@@ -1249,7 +1246,7 @@ void WebSocketsServer::begin()
   WebSocketsServerCore::begin();
   _server->begin();
 
-  WSK_LOGDEBUG("[WS-Server] Server Started.");
+  WS_LOGDEBUG("[WS-Server] Server Started.");
 }
 
 void WebSocketsServer::close()
