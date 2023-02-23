@@ -1,7 +1,7 @@
 /*********************************************************************************************************
   WebSocketsDebug_Generic.h - WebSockets Library for boards
 
-  Based on and modified from WebSockets libarary https://github.com/Links2004/arduinoWS
+  Based on and modified from WebSockets libarary https://github.com/Links2004/arduinoWebSockets
   to support other boards such as  SAMD21, SAMD51, Adafruit's nRF52, Teensy, STM32F, SAM DUE boards, etc.
 
   Built by Khoi Hoang https://github.com/khoih-prog/WS_Generic
