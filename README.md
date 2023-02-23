@@ -260,10 +260,6 @@ This [**WebSockets_Generic** library](https://github.com/khoih-prog/WebSockets_G
 6. `Teensy 4.1` built-in Ethernet using [`NativeEthernet`](https://github.com/vjmuzik/NativeEthernet) library
 7. `Teensy 4.1` built-in Ethernet using [`QNEthernet`](https://github.com/ssilverman/QNEthernet) library
 8. Portenta_H7 using Ethernet from [Portenta Vision shields](https://store-usa.arduino.cc/products/arduino-portenta-vision-shield-ethernet)
-  
-<p align="center">
-    <img src="https://github.com/khoih-prog/WebSockets_Generic/raw/master/pics/Portenta_Vision.jpg">
-</p>
 
 ---
 ---
