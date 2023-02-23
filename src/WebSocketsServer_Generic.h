@@ -55,89 +55,93 @@
 #include "WebSockets_Generic.h"
 
 #ifndef WEBSOCKETS_SERVER_CLIENT_MAX
-  #define WEBSOCKETS_SERVER_CLIENT_MAX (5)
+#define WEBSOCKETS_SERVER_CLIENT_MAX (5)
 #endif
 
-class WebSocketsServerCore : protected WebSockets
-{
+class WebSocketsServerCore : protected WebSockets {
   public:
-    WebSocketsServerCore(const String & origin = "", const String & protocol = "arduino");
+    WebSocketsServerCore(const String &origin = "", const String &protocol = "arduino");
     virtual ~WebSocketsServerCore();
 
     void begin();
     void close();
 
 #ifdef __AVR__
-    typedef void (*WebSocketServerEvent)(const uint8_t& num, const WStype_t& type, uint8_t * payload, const size_t& length);
-    typedef bool (*WebSocketServerHttpHeaderValFunc)(const String& headerName, const String& headerValue);
+    typedef void (*WebSocketServerEvent)(const uint8_t &num, const WStype_t &type, uint8_t *payload,
+                                         const size_t &length);
+    typedef bool (*WebSocketServerHttpHeaderValFunc)(const String &headerName,
+                                                     const String &headerValue);
 #else
-    typedef std::function<void(const uint8_t& num, const WStype_t& type, uint8_t * payload, const size_t& length)>
-    WebSocketServerEvent;
-    typedef std::function<bool(const String& headerName, const String& headerValue)> WebSocketServerHttpHeaderValFunc;
+    typedef std::function<void(const uint8_t &num, const WStype_t &type, uint8_t *payload,
+                               const size_t &length)>
+        WebSocketServerEvent;
+    typedef std::function<bool(const String &headerName, const String &headerValue)>
+        WebSocketServerHttpHeaderValFunc;
 #endif
 
     void onEvent(WebSocketServerEvent cbEvent);
-    void onValidateHttpHeader(
-      WebSocketServerHttpHeaderValFunc validationFunc,
-      const char * mandatoryHttpHeaders[],
-      size_t mandatoryHttpHeaderCount);
+    void onValidateHttpHeader(WebSocketServerHttpHeaderValFunc validationFunc,
+                              const char *mandatoryHttpHeaders[], size_t mandatoryHttpHeaderCount);
 
-    bool sendTXT(const uint8_t& num, uint8_t * payload, size_t length = 0, bool headerToPayload = false);
-    bool sendTXT(const uint8_t& num, const uint8_t * payload, size_t length = 0);
-    bool sendTXT(const uint8_t& num, char * payload, size_t length = 0, bool headerToPayload = false);
-    bool sendTXT(const uint8_t& num, const char * payload, size_t length = 0);
-    bool sendTXT(const uint8_t& num, const String& payload);
+    bool sendTXT(const uint8_t &num, uint8_t *payload, size_t length = 0,
+                 bool headerToPayload = false);
+    bool sendTXT(const uint8_t &num, const uint8_t *payload, size_t length = 0);
+    bool sendTXT(const uint8_t &num, char *payload, size_t length = 0,
+                 bool headerToPayload = false);
+    bool sendTXT(const uint8_t &num, const char *payload, size_t length = 0);
+    bool sendTXT(const uint8_t &num, const String &payload);
 
-    bool broadcastTXT(uint8_t * payload, size_t length = 0, bool headerToPayload = false);
-    bool broadcastTXT(const uint8_t * payload, size_t length = 0);
-    bool broadcastTXT(char * payload, size_t length = 0, bool headerToPayload = false);
-    bool broadcastTXT(const char * payload, size_t length = 0);
-    bool broadcastTXT(const String& payload);
+    bool broadcastTXT(uint8_t *payload, size_t length = 0, bool headerToPayload = false);
+    bool broadcastTXT(const uint8_t *payload, size_t length = 0);
+    bool broadcastTXT(char *payload, size_t length = 0, bool headerToPayload = false);
+    bool broadcastTXT(const char *payload, size_t length = 0);
+    bool broadcastTXT(const String &payload);
 
-    bool sendBIN(const uint8_t& num, uint8_t * payload, size_t length, bool headerToPayload = false);
-    bool sendBIN(const uint8_t& num, const uint8_t * payload, size_t length);
+    bool sendBIN(const uint8_t &num, uint8_t *payload, size_t length, bool headerToPayload = false);
+    bool sendBIN(const uint8_t &num, const uint8_t *payload, size_t length);
 
-    bool broadcastBIN(uint8_t * payload, size_t length, bool headerToPayload = false);
-    bool broadcastBIN(const uint8_t * payload, size_t length);
+    bool broadcastBIN(uint8_t *payload, size_t length, bool headerToPayload = false);
+    bool broadcastBIN(const uint8_t *payload, size_t length);
 
-    bool sendPing(const uint8_t& num, uint8_t * payload = NULL, size_t length = 0);
-    bool sendPing(const uint8_t& num, const String& payload);
+    bool sendPing(const uint8_t &num, uint8_t *payload = NULL, size_t length = 0);
+    bool sendPing(const uint8_t &num, const String &payload);
 
-    bool broadcastPing(uint8_t * payload = NULL, size_t length = 0);
-    bool broadcastPing(const String& payload);
+    bool broadcastPing(uint8_t *payload = NULL, size_t length = 0);
+    bool broadcastPing(const String &payload);
 
     void disconnect();
-    void disconnect(const uint8_t& num);
+    void disconnect(const uint8_t &num);
 
-    void setAuthorization(const char * user, const char * password);
-    void setAuthorization(const char * auth);
+    void setAuthorization(const char *user, const char *password);
+    void setAuthorization(const char *auth);
 
     int connectedClients(bool ping = false);
 
-    bool clientIsConnected(const uint8_t& num);
+    bool clientIsConnected(const uint8_t &num);
 
-    void enableHeartbeat(const uint32_t& pingInterval, const uint32_t& pongTimeout, const uint8_t& disconnectTimeoutCount);
+    void enableHeartbeat(const uint32_t &pingInterval, const uint32_t &pongTimeout,
+                         const uint8_t &disconnectTimeoutCount);
     void disableHeartbeat();
 
-#if (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266) || (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC)\
-     || (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP32) || (WEBSOCKETS_NETWORK_TYPE == NETWORK_RTL8720DN)
-    IPAddress remoteIP(const uint8_t& num);
+#if (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266) ||                                                \
+    (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC) ||                                          \
+    (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP32) || (WEBSOCKETS_NETWORK_TYPE == NETWORK_RTL8720DN)
+    IPAddress remoteIP(const uint8_t &num);
 #endif
 
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
-    void loop();    // handle client data only
+#if (WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
+    void loop(); // handle client data only
 #endif
 
-    WSclient_t * newClient(WEBSOCKETS_NETWORK_CLASS * TCPclient);
+    WSclient_t *newClient(WEBSOCKETS_NETWORK_CLASS *TCPclient);
 
   protected:
-
     uint8_t currentActiveClient = 0xFF;
 
     String _origin;
     String _protocol;
-    String _base64Authorization;    ///< Base64 encoded Auth request
-    String * _mandatoryHttpHeaders;
+    String _base64Authorization; ///< Base64 encoded Auth request
+    String *_mandatoryHttpHeaders;
     size_t _mandatoryHttpHeaderCount;
 
     WSclient_t _clients[WEBSOCKETS_SERVER_CLIENT_MAX];
@@ -151,39 +155,39 @@ class WebSocketsServerCore : protected WebSockets
     uint32_t _pongTimeout;
     uint8_t _disconnectTimeoutCount;
 
-    void messageReceived(WSclient_t * client, WSopcode_t opcode, uint8_t * payload, size_t length, bool fin);
+    void messageReceived(WSclient_t *client, WSopcode_t opcode, uint8_t *payload, size_t length,
+                         bool fin);
 
-    void clientDisconnect(WSclient_t * client);
-    bool clientIsConnected(WSclient_t * client);
+    void clientDisconnect(WSclient_t *client);
+    bool clientIsConnected(WSclient_t *client);
 
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
+#if (WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
     void handleClientData();
 #endif
 
-    void handleHeader(WSclient_t * client, String& headerLine);
+    void handleHeader(WSclient_t *client, String &headerLine);
 
-    void handleHBPing(WSclient_t * client);    // send ping in specified intervals
+    void handleHBPing(WSclient_t *client); // send ping in specified intervals
 
     /**
            called if a non Websocket connection is coming in.
            Note: can be override
            @param client WSclient_t *  ptr to the client struct
     */
-    virtual void handleNonWebsocketConnection(WSclient_t * client)
-    {
-      WS_LOGDEBUG2("[WS-Server handleHeader] no Websocket connection close. Client =", client->num);
+    virtual void handleNonWebsocketConnection(WSclient_t *client) {
+        WS_LOGDEBUG2("[WS-Server handleHeader] no Websocket connection close. Client =",
+                     client->num);
 
-      client->tcp->write(
-        "HTTP/1.1 400 Bad Request\r\n"
-        "Server: arduino-WebSocket-Server\r\n"
-        "Content-Type: text/plain\r\n"
-        "Content-Length: 32\r\n"
-        "Connection: close\r\n"
-        "Sec-WebSocket-Version: 13\r\n"
-        "\r\n"
-        "This is a Websocket server only!");
+        client->tcp->write("HTTP/1.1 400 Bad Request\r\n"
+                           "Server: arduino-WebSocket-Server\r\n"
+                           "Content-Type: text/plain\r\n"
+                           "Content-Length: 32\r\n"
+                           "Connection: close\r\n"
+                           "Sec-WebSocket-Version: 13\r\n"
+                           "\r\n"
+                           "This is a Websocket server only!");
 
-      clientDisconnect(client);
+        clientDisconnect(client);
     }
 
     /**
@@ -191,20 +195,18 @@ class WebSocketsServerCore : protected WebSockets
            Note: can be override
            @param client WSclient_t *  ptr to the client struct
     */
-    virtual void handleAuthorizationFailed(WSclient_t * client)
-    {
-      client->tcp->write(
-        "HTTP/1.1 401 Unauthorized\r\n"
-        "Server: arduino-WebSocket-Server\r\n"
-        "Content-Type: text/plain\r\n"
-        "Content-Length: 45\r\n"
-        "Connection: close\r\n"
-        "Sec-WebSocket-Version: 13\r\n"
-        "WWW-Authenticate: Basic realm=\"WebSocket Server\""
-        "\r\n"
-        "This Websocket server requires Authorization!");
+    virtual void handleAuthorizationFailed(WSclient_t *client) {
+        client->tcp->write("HTTP/1.1 401 Unauthorized\r\n"
+                           "Server: arduino-WebSocket-Server\r\n"
+                           "Content-Type: text/plain\r\n"
+                           "Content-Length: 45\r\n"
+                           "Connection: close\r\n"
+                           "Sec-WebSocket-Version: 13\r\n"
+                           "WWW-Authenticate: Basic realm=\"WebSocket Server\""
+                           "\r\n"
+                           "This Websocket server requires Authorization!");
 
-      clientDisconnect(client);
+        clientDisconnect(client);
     }
 
     /**
@@ -214,77 +216,75 @@ class WebSocketsServerCore : protected WebSockets
            @param payload uint8_t
            @param length size_t
     */
-    //virtual void runCbEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
-    virtual void runCbEvent(const uint8_t& num, const WStype_t& type, uint8_t * payload, const size_t& length)
-    {
-      if (_cbEvent)
-      {
-        _cbEvent(num, type, payload, length);
-      }
+    // virtual void runCbEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
+    virtual void runCbEvent(const uint8_t &num, const WStype_t &type, uint8_t *payload,
+                            const size_t &length) {
+        if (_cbEvent) {
+            _cbEvent(num, type, payload, length);
+        }
     }
 
     /*
-           Called at client socket connect handshake negotiation time for each http header that is not
-           a websocket specific http header (not Connection, Upgrade, Sec-WebSocket-*)
-           If the custom httpHeaderValidationFunc returns false for any headerName / headerValue passed, the
-           socket negotiation is considered invalid and the upgrade to websockets request is denied / rejected
+           Called at client socket connect handshake negotiation time for each http header that is
+       not a websocket specific http header (not Connection, Upgrade, Sec-WebSocket-*) If the custom
+       httpHeaderValidationFunc returns false for any headerName / headerValue passed, the socket
+       negotiation is considered invalid and the upgrade to websockets request is denied / rejected
            This mechanism can be used to enable custom authentication schemes e.g. test the value
            of a session cookie to determine if a user is logged on / authenticated
     */
-    virtual bool execHttpHeaderValidation(const String& headerName, const String& headerValue)
-    {
-      if (_httpHeaderValidationFunc)
-      {
-        //return the value of the custom http header validation function
-        return _httpHeaderValidationFunc(headerName, headerValue);
-      }
+    virtual bool execHttpHeaderValidation(const String &headerName, const String &headerValue) {
+        if (_httpHeaderValidationFunc) {
+            // return the value of the custom http header validation function
+            return _httpHeaderValidationFunc(headerName, headerValue);
+        }
 
-      //no custom http header validation so just assume all is good
-      return true;
+        // no custom http header validation so just assume all is good
+        return true;
     }
 
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
-    WSclient_t * handleNewClient(WEBSOCKETS_NETWORK_CLASS * tcpClient);
+#if (WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
+    WSclient_t *handleNewClient(WEBSOCKETS_NETWORK_CLASS *tcpClient);
 #endif
 
     /**
        drop native tcp connection (client->tcp)
     */
-    void dropNativeClient(WSclient_t * client);
+    void dropNativeClient(WSclient_t *client);
 
   private:
     /*
-           returns an indicator whether the given named header exists in the configured _mandatoryHttpHeaders collection
+           returns an indicator whether the given named header exists in the configured
+       _mandatoryHttpHeaders collection
            @param headerName String ///< the name of the header being checked
     */
-    bool hasMandatoryHeader(const String& headerName);
+    bool hasMandatoryHeader(const String &headerName);
 };
 
-class WebSocketsServer : public WebSocketsServerCore
-{
+class WebSocketsServer : public WebSocketsServerCore {
   public:
-    WebSocketsServer(const uint16_t& port, const String & origin = "", const String & protocol = "arduino");
+    WebSocketsServer(const uint16_t &port, const String &origin = "",
+                     const String &protocol = "arduino");
     virtual ~WebSocketsServer();
 
     void begin();
     void close();
 
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
-    void loop();    // handle incoming client and client data
+#if (WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
+    void loop(); // handle incoming client and client data
 #else
     // Async interface not need a loop call
     void loop() __attribute__((deprecated)) {}
 #endif
 
   protected:
-#if(WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
+#if (WEBSOCKETS_NETWORK_TYPE != NETWORK_ESP8266_ASYNC)
     void handleNewClients();
 #endif
 
     uint16_t _port;
-    WEBSOCKETS_NETWORK_SERVER_CLASS * _server;
+    WEBSOCKETS_NETWORK_SERVER_CLASS *_server;
 };
 
 #include "WebSocketsServer_Generic-Impl.h"
 
-#endif    // WEBSOCKETS_SERVER_GENERIC_H_
+#endif // WEBSOCKETS_SERVER_GENERIC_H_

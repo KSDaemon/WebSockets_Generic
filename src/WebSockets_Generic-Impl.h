@@ -52,38 +52,35 @@
 #ifndef WEBSOCKETS_GENERIC_IMPL_H_
 #define WEBSOCKETS_GENERIC_IMPL_H_
 
-
 #ifdef ESP8266
-  #include <core_esp8266_features.h>
+#include <core_esp8266_features.h>
 #endif
-
 
 #if defined(ESP32) || defined(WIO_TERMINAL)
-  #ifndef CORE_HAS_LIBB64
-    #define CORE_HAS_LIBB64
-  #endif
+#ifndef CORE_HAS_LIBB64
+#define CORE_HAS_LIBB64
+#endif
 #endif
 
-
-extern "C"
-{
-  // Kludge to fix compile error for boards using libraries with lib64. From v2.3.3.
-  // To find better way, such as reused #ifdef ABC_H or #define LIBRARY_USING_LIB64 or #define CORE_HAS_LIBB64 in those libraries
-#if defined(CORE_HAS_LIBB64) || defined(base64_encode_expected_len) || defined(base64_decode_expected_len)
-#if(WS_LOG_LEVEL>3)
+extern "C" {
+// Kludge to fix compile error for boards using libraries with lib64. From v2.3.3.
+// To find better way, such as reused #ifdef ABC_H or #define LIBRARY_USING_LIB64 or #define
+// CORE_HAS_LIBB64 in those libraries
+#if defined(CORE_HAS_LIBB64) || defined(base64_encode_expected_len) ||                             \
+    defined(base64_decode_expected_len)
+#if (WS_LOG_LEVEL > 3)
 #warning CORE_HAS_LIBB64
 #endif
 
 #include <libb64/cencode.h>
 #else
-#if(WS_LOG_LEVEL>3)
+#if (WS_LOG_LEVEL > 3)
 #warning No CORE_HAS_LIBB64
 #endif
 
 #include "libb64/cencode_inc.h"
 #endif
 }
-
 
 #ifdef ESP8266
 #include <Hash.h>
@@ -92,24 +89,22 @@ extern "C"
 #include <esp_system.h>
 
 #if ESP_IDF_VERSION_MAJOR >= 4
-  #if ( ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(1, 0, 6) )
-    #include "sha/sha_parallel_engine.h"
-  #else
-    #include <esp32/sha.h>
-  #endif
+#if (ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(1, 0, 6))
+#include "sha/sha_parallel_engine.h"
 #else
-  #include <hwcrypto/sha.h>
+#include <esp32/sha.h>
+#endif
+#else
+#include <hwcrypto/sha.h>
 #endif
 
 #else
 
-extern "C"
-{
+extern "C" {
 #include "libsha1/libsha1.h"
 }
 
 #endif
-
 
 /**
 
@@ -118,28 +113,23 @@ extern "C"
    @param reason ptr to the disconnect reason message
    @param reasonLen length of the disconnect reason message
 */
-void WebSockets::clientDisconnect(WSclient_t * client, uint16_t code, char * reason, size_t reasonLen)
-{
-  WS_LOGDEBUG3(client->num, "[handleWebsocket] clientDisconnect code:", code);
+void WebSockets::clientDisconnect(WSclient_t *client, uint16_t code, char *reason,
+                                  size_t reasonLen) {
+    WS_LOGDEBUG3(client->num, "[handleWebsocket] clientDisconnect code:", code);
 
-  if (client->status == WSC_CONNECTED && code)
-  {
-    if (reason)
-    {
-      sendFrame(client, WSop_close, (uint8_t *) reason, reasonLen);
+    if (client->status == WSC_CONNECTED && code) {
+        if (reason) {
+            sendFrame(client, WSop_close, (uint8_t *)reason, reasonLen);
+        } else {
+            uint8_t buffer[2];
+            buffer[0] = ((code >> 8) & 0xFF);
+            buffer[1] = (code & 0xFF);
+            sendFrame(client, WSop_close, &buffer[0], 2);
+        }
     }
-    else
-    {
-      uint8_t buffer[2];
-      buffer[0] = ((code >> 8) & 0xFF);
-      buffer[1] = (code & 0xFF);
-      sendFrame(client, WSop_close, &buffer[0], 2);
-    }
-  }
 
-  clientDisconnect(client);
+    clientDisconnect(client);
 }
-
 
 /**
 
@@ -148,129 +138,112 @@ void WebSockets::clientDisconnect(WSclient_t * client, uint16_t code, char * rea
    @param length size_t         length of the payload
    @param mask bool             add dummy mask to the frame (needed for web browser)
    @param maskkey uint8_t[4]    key used for payload
-   @param fin bool              can be used to send data in more then one frame (set fin on the last frame)
+   @param fin bool              can be used to send data in more then one frame (set fin on the last
+   frame)
 */
-uint8_t WebSockets::createHeader(uint8_t * headerPtr, WSopcode_t opcode, size_t length, bool mask,
-                                 uint8_t maskKey[4], bool fin)
-{
-  uint8_t headerSize;
+uint8_t WebSockets::createHeader(uint8_t *headerPtr, WSopcode_t opcode, size_t length, bool mask,
+                                 uint8_t maskKey[4], bool fin) {
+    uint8_t headerSize;
 
-  // calculate header Size
-  if (length < 126)
-  {
-    headerSize = 2;
-  }
-  else if (length < 0xFFFF)
-  {
-    headerSize = 4;
-  }
-  else
-  {
-    headerSize = 10;
-  }
+    // calculate header Size
+    if (length < 126) {
+        headerSize = 2;
+    } else if (length < 0xFFFF) {
+        headerSize = 4;
+    } else {
+        headerSize = 10;
+    }
 
-  if (mask)
-  {
-    headerSize += 4;
-  }
+    if (mask) {
+        headerSize += 4;
+    }
 
-  // create header
+    // create header
 
-  // byte 0
-  *headerPtr = 0x00;
-
-  if (fin)
-  {
-    *headerPtr |= bit(7);    ///< set Fin
-  }
-
-  *headerPtr |= opcode;    ///< set opcode
-  headerPtr++;
-
-  // byte 1
-  *headerPtr = 0x00;
-
-  if (mask)
-  {
-    *headerPtr |= bit(7);    ///< set mask
-  }
-
-  if (length < 126)
-  {
-    *headerPtr |= length;
-    headerPtr++;
-  }
-  else if (length < 0xFFFF)
-  {
-    *headerPtr |= 126;
-    headerPtr++;
-    *headerPtr = ((length >> 8) & 0xFF);
-    headerPtr++;
-    *headerPtr = (length & 0xFF);
-    headerPtr++;
-  }
-  else
-  {
-    // Normally we never get here (to less memory)
-    *headerPtr |= 127;
-    headerPtr++;
+    // byte 0
     *headerPtr = 0x00;
-    headerPtr++;
-    *headerPtr = 0x00;
-    headerPtr++;
-    *headerPtr = 0x00;
-    headerPtr++;
-    *headerPtr = 0x00;
-    headerPtr++;
-    *headerPtr = ((length >> 24) & 0xFF);
-    headerPtr++;
-    *headerPtr = ((length >> 16) & 0xFF);
-    headerPtr++;
-    *headerPtr = ((length >> 8) & 0xFF);
-    headerPtr++;
-    *headerPtr = (length & 0xFF);
-    headerPtr++;
-  }
 
-  if (mask)
-  {
-    *headerPtr = maskKey[0];
-    headerPtr++;
-    *headerPtr = maskKey[1];
-    headerPtr++;
-    *headerPtr = maskKey[2];
-    headerPtr++;
-    *headerPtr = maskKey[3];
-    headerPtr++;
-  }
+    if (fin) {
+        *headerPtr |= bit(7); ///< set Fin
+    }
 
-  return headerSize;
+    *headerPtr |= opcode; ///< set opcode
+    headerPtr++;
+
+    // byte 1
+    *headerPtr = 0x00;
+
+    if (mask) {
+        *headerPtr |= bit(7); ///< set mask
+    }
+
+    if (length < 126) {
+        *headerPtr |= length;
+        headerPtr++;
+    } else if (length < 0xFFFF) {
+        *headerPtr |= 126;
+        headerPtr++;
+        *headerPtr = ((length >> 8) & 0xFF);
+        headerPtr++;
+        *headerPtr = (length & 0xFF);
+        headerPtr++;
+    } else {
+        // Normally we never get here (to less memory)
+        *headerPtr |= 127;
+        headerPtr++;
+        *headerPtr = 0x00;
+        headerPtr++;
+        *headerPtr = 0x00;
+        headerPtr++;
+        *headerPtr = 0x00;
+        headerPtr++;
+        *headerPtr = 0x00;
+        headerPtr++;
+        *headerPtr = ((length >> 24) & 0xFF);
+        headerPtr++;
+        *headerPtr = ((length >> 16) & 0xFF);
+        headerPtr++;
+        *headerPtr = ((length >> 8) & 0xFF);
+        headerPtr++;
+        *headerPtr = (length & 0xFF);
+        headerPtr++;
+    }
+
+    if (mask) {
+        *headerPtr = maskKey[0];
+        headerPtr++;
+        *headerPtr = maskKey[1];
+        headerPtr++;
+        *headerPtr = maskKey[2];
+        headerPtr++;
+        *headerPtr = maskKey[3];
+        headerPtr++;
+    }
+
+    return headerSize;
 }
-
 
 /**
 
    @param client WSclient_t *   ptr to the client struct
    @param opcode WSopcode_t
    @param length size_t         length of the payload
-   @param fin bool              can be used to send data in more then one frame (set fin on the last frame)
+   @param fin bool              can be used to send data in more then one frame (set fin on the last
+   frame)
    @return true if ok
 */
-bool WebSockets::sendFrameHeader(WSclient_t * client, WSopcode_t opcode, size_t length, bool fin)
-{
-  uint8_t maskKey[4]                         = { 0x00, 0x00, 0x00, 0x00 };
-  uint8_t buffer[WEBSOCKETS_MAX_HEADER_SIZE] = { 0 };
+bool WebSockets::sendFrameHeader(WSclient_t *client, WSopcode_t opcode, size_t length, bool fin) {
+    uint8_t maskKey[4]                         = {0x00, 0x00, 0x00, 0x00};
+    uint8_t buffer[WEBSOCKETS_MAX_HEADER_SIZE] = {0};
 
-  uint8_t headerSize = createHeader(&buffer[0], opcode, length, client->cIsClient, maskKey, fin);
+    uint8_t headerSize = createHeader(&buffer[0], opcode, length, client->cIsClient, maskKey, fin);
 
-  if (write(client, &buffer[0], headerSize) != headerSize)
-  {
-    return false;
-  }
+    if (write(client, &buffer[0], headerSize) != headerSize) {
+        return false;
+    }
 
-  return true;
+    return true;
 }
-
 
 /**
 
@@ -278,519 +251,448 @@ bool WebSockets::sendFrameHeader(WSclient_t * client, WSopcode_t opcode, size_t 
    @param opcode WSopcode_t
    @param payload uint8_t *     ptr to the payload
    @param length size_t         length of the payload
-   @param fin bool              can be used to send data in more then one frame (set fin on the last frame)
-   @param headerToPayload bool  set true if the payload has reserved 14 Byte at the beginning to dynamically
-                                add the Header (payload neet to be in RAM!)
+   @param fin bool              can be used to send data in more then one frame (set fin on the last
+   frame)
+   @param headerToPayload bool  set true if the payload has reserved 14 Byte at the beginning to
+   dynamically add the Header (payload neet to be in RAM!)
    @return true if ok
 */
-bool WebSockets::sendFrame(WSclient_t * client, WSopcode_t opcode, uint8_t * payload, size_t length,
-                           bool fin, bool headerToPayload)
-{
-  if (client->tcp && !client->tcp->connected())
-  {
-    WS_LOGDEBUG2("[sendFrame] Not Connected!? Client:", client->num);
+bool WebSockets::sendFrame(WSclient_t *client, WSopcode_t opcode, uint8_t *payload, size_t length,
+                           bool fin, bool headerToPayload) {
+    if (client->tcp && !client->tcp->connected()) {
+        WS_LOGDEBUG2("[sendFrame] Not Connected!? Client:", client->num);
 
+        return false;
+    }
 
-    return false;
-  }
+    if (client->status != WSC_CONNECTED) {
+        WS_LOGDEBUG2("[sendFrame] not in WSC_CONNECTED state!? Client:", client->num);
 
-  if (client->status != WSC_CONNECTED)
-  {
-    WS_LOGDEBUG2("[sendFrame] not in WSC_CONNECTED state!? Client:", client->num);
+        return false;
+    }
 
-    return false;
-  }
+    WS_LOGDEBUG("[sendFrame] ------- send message frame -------");
 
-  WS_LOGDEBUG("[sendFrame] ------- send message frame -------");
+    WS_LOGDEBUG2("[sendFrame] Client:", client->num);
+    WS_LOGDEBUG2("fin:", fin);
+    WS_LOGDEBUG2("opCode:", opcode);
+    WS_LOGDEBUG2("mask:", client->cIsClient);
+    WS_LOGDEBUG2("length:", length);
+    WS_LOGDEBUG2("headerToPayload:", headerToPayload);
 
-  WS_LOGDEBUG2("[sendFrame] Client:", client->num);
-  WS_LOGDEBUG2("fin:",                fin);
-  WS_LOGDEBUG2("opCode:",             opcode);
-  WS_LOGDEBUG2("mask:",               client->cIsClient);
-  WS_LOGDEBUG2("length:",             length);
-  WS_LOGDEBUG2("headerToPayload:",    headerToPayload);
+    if (opcode == WSop_text) {
+        WS_LOGDEBUG4("[sendFrame] Client: ", client->num,
+                     ", text:", (char *)(payload + (headerToPayload ? 14 : 0)));
+    }
 
-  if (opcode == WSop_text)
-  {
-    WS_LOGDEBUG4("[sendFrame] Client: ", client->num, ", text:", (char*) (payload + (headerToPayload ? 14 : 0)));
-  }
+    uint8_t maskKey[4]                         = {0x00, 0x00, 0x00, 0x00};
+    uint8_t buffer[WEBSOCKETS_MAX_HEADER_SIZE] = {0};
 
-  uint8_t maskKey[4]                         = { 0x00, 0x00, 0x00, 0x00 };
-  uint8_t buffer[WEBSOCKETS_MAX_HEADER_SIZE] = { 0 };
+    uint8_t headerSize;
+    uint8_t *headerPtr;
+    uint8_t *payloadPtr  = payload;
+    bool useInternBuffer = false;
+    bool ret             = true;
 
-  uint8_t headerSize;
-  uint8_t * headerPtr;
-  uint8_t * payloadPtr = payload;
-  bool useInternBuffer = false;
-  bool ret             = true;
+    // calculate header Size
+    if (length < 126) {
+        headerSize = 2;
+    } else if (length < 0xFFFF) {
+        headerSize = 4;
+    } else {
+        headerSize = 10;
+    }
 
-  // calculate header Size
-  if (length < 126)
-  {
-    headerSize = 2;
-  }
-  else if (length < 0xFFFF)
-  {
-    headerSize = 4;
-  }
-  else
-  {
-    headerSize = 10;
-  }
-
-  if (client->cIsClient)
-  {
-    headerSize += 4;
-  }
+    if (client->cIsClient) {
+        headerSize += 4;
+    }
 
 #ifdef WEBSOCKETS_USE_BIG_MEM
 
-  // only for ESP since AVR has less HEAP
-  // try to send data in one TCP package (only if some free Heap is there)
-  if (!headerToPayload && ((length > 0) && (length < 1400)) && (GET_FREE_HEAP > 6000))
-  {
-    WS_LOGDEBUG2("[sendFrame] pack to one TCP package... Client:", client->num);
+    // only for ESP since AVR has less HEAP
+    // try to send data in one TCP package (only if some free Heap is there)
+    if (!headerToPayload && ((length > 0) && (length < 1400)) && (GET_FREE_HEAP > 6000)) {
+        WS_LOGDEBUG2("[sendFrame] pack to one TCP package... Client:", client->num);
 
-    uint8_t * dataPtr = (uint8_t *)malloc(length + WEBSOCKETS_MAX_HEADER_SIZE);
+        uint8_t *dataPtr = (uint8_t *)malloc(length + WEBSOCKETS_MAX_HEADER_SIZE);
 
-    if (dataPtr)
-    {
-      memcpy((dataPtr + WEBSOCKETS_MAX_HEADER_SIZE), payload, length);
-      headerToPayload = true;
-      useInternBuffer = true;
-      payloadPtr      = dataPtr;
+        if (dataPtr) {
+            memcpy((dataPtr + WEBSOCKETS_MAX_HEADER_SIZE), payload, length);
+            headerToPayload = true;
+            useInternBuffer = true;
+            payloadPtr      = dataPtr;
+        }
     }
-  }
 
 #endif
 
-  // set Header Pointer
-  if (headerToPayload)
-  {
-    // calculate offset in payload
-    headerPtr = (payloadPtr + (WEBSOCKETS_MAX_HEADER_SIZE - headerSize));
-  }
-  else
-  {
-    headerPtr = &buffer[0];
-  }
-
-  if (client->cIsClient && useInternBuffer)
-  {
-    // if we use a Intern Buffer we can modify the data
-    // by this fact its possible the do the masking
-    for (uint8_t x = 0; x < sizeof(maskKey); x++)
-    {
-      maskKey[x] = random(0xFF);
-    }
-  }
-
-  createHeader(headerPtr, opcode, length, client->cIsClient, maskKey, fin);
-
-  if (client->cIsClient && useInternBuffer)
-  {
-    uint8_t * dataMaskPtr;
-
-    if (headerToPayload)
-    {
-      dataMaskPtr = (payloadPtr + WEBSOCKETS_MAX_HEADER_SIZE);
-    }
-    else
-    {
-      dataMaskPtr = payloadPtr;
+    // set Header Pointer
+    if (headerToPayload) {
+        // calculate offset in payload
+        headerPtr = (payloadPtr + (WEBSOCKETS_MAX_HEADER_SIZE - headerSize));
+    } else {
+        headerPtr = &buffer[0];
     }
 
-    for (size_t x = 0; x < length; x++)
-    {
-      dataMaskPtr[x] = (dataMaskPtr[x] ^ maskKey[x % 4]);
+    if (client->cIsClient && useInternBuffer) {
+        // if we use a Intern Buffer we can modify the data
+        // by this fact its possible the do the masking
+        for (uint8_t x = 0; x < sizeof(maskKey); x++) {
+            maskKey[x] = random(0xFF);
+        }
     }
-  }
+
+    createHeader(headerPtr, opcode, length, client->cIsClient, maskKey, fin);
+
+    if (client->cIsClient && useInternBuffer) {
+        uint8_t *dataMaskPtr;
+
+        if (headerToPayload) {
+            dataMaskPtr = (payloadPtr + WEBSOCKETS_MAX_HEADER_SIZE);
+        } else {
+            dataMaskPtr = payloadPtr;
+        }
+
+        for (size_t x = 0; x < length; x++) {
+            dataMaskPtr[x] = (dataMaskPtr[x] ^ maskKey[x % 4]);
+        }
+    }
 
 #ifndef NODEBUG_WEBSOCKETS
-  unsigned long start = micros();
+    unsigned long start = micros();
 #endif
 
-  if (headerToPayload)
-  {
-    // header has be added to payload
-    // payload is forced to reserved 14 Byte but we may not need all based on the length and mask settings
-    // offset in payload is calculatetd 14 - headerSize
-    if (write(client, &payloadPtr[(WEBSOCKETS_MAX_HEADER_SIZE - headerSize)],
-              (length + headerSize)) != (length + headerSize))
-    {
-      ret = false;
-    }
-  }
-  else
-  {
-    // send header
-    if (write(client, &buffer[0], headerSize) != headerSize)
-    {
-      ret = false;
-    }
+    if (headerToPayload) {
+        // header has be added to payload
+        // payload is forced to reserved 14 Byte but we may not need all based on the length and
+        // mask settings offset in payload is calculatetd 14 - headerSize
+        if (write(client, &payloadPtr[(WEBSOCKETS_MAX_HEADER_SIZE - headerSize)],
+                  (length + headerSize)) != (length + headerSize)) {
+            ret = false;
+        }
+    } else {
+        // send header
+        if (write(client, &buffer[0], headerSize) != headerSize) {
+            ret = false;
+        }
 
-    if (payloadPtr && length > 0)
-    {
-      // send payload
-      if (write(client, &payloadPtr[0], length) != length)
-      {
-        ret = false;
-      }
+        if (payloadPtr && length > 0) {
+            // send payload
+            if (write(client, &payloadPtr[0], length) != length) {
+                ret = false;
+            }
+        }
     }
-  }
 
 #ifndef NODEBUG_WEBSOCKETS
-  WS_LOGDEBUG4("[handleWebsocketWaitFor] Sending Frame Done. Client: ", client->num, ", (us):", (micros() - start));
+    WS_LOGDEBUG4("[handleWebsocketWaitFor] Sending Frame Done. Client: ", client->num,
+                 ", (us):", (micros() - start));
 #endif
 
 #ifdef WEBSOCKETS_USE_BIG_MEM
 
-  if (useInternBuffer && payloadPtr)
-  {
-    free(payloadPtr);
-  }
+    if (useInternBuffer && payloadPtr) {
+        free(payloadPtr);
+    }
 
 #endif
 
-  return ret;
+    return ret;
 }
-
 
 /**
    callen when HTTP header is done
    @param client WSclient_t *  ptr to the client struct
 */
-void WebSockets::headerDone(WSclient_t * client)
-{
-  client->status    = WSC_CONNECTED;
-  client->cWsRXsize = 0;
+void WebSockets::headerDone(WSclient_t *client) {
+    client->status    = WSC_CONNECTED;
+    client->cWsRXsize = 0;
 
-  WS_LOGDEBUG2("[headerDone] Header Handling Done. Client:", client->num);
+    WS_LOGDEBUG2("[headerDone] Header Handling Done. Client:", client->num);
 
 #if (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC)
-  client->cHttpLine = "";
-  handleWebsocket(client);
+    client->cHttpLine = "";
+    handleWebsocket(client);
 #endif
 }
-
 
 /**
    handle the WebSocket stream
    @param client WSclient_t *  ptr to the client struct
 */
-void WebSockets::handleWebsocket(WSclient_t * client)
-{
-  if (client->cWsRXsize == 0)
-  {
-    handleWebsocketCb(client);
-  }
+void WebSockets::handleWebsocket(WSclient_t *client) {
+    if (client->cWsRXsize == 0) {
+        handleWebsocketCb(client);
+    }
 }
-
 
 /**
    wait for
    @param client
    @param size
 */
-bool WebSockets::handleWebsocketWaitFor(WSclient_t * client, size_t size)
-{
-  if (!client->tcp || !client->tcp->connected())
-  {
-    return false;
-  }
-
-  if (size > WEBSOCKETS_MAX_HEADER_SIZE)
-  {
-    WS_LOGDEBUG4("[handleWebsocketWaitFor] Client: ", client->num, ", size too big:", size);
-
-    return false;
-  }
-
-  if (client->cWsRXsize >= size)
-  {
-    return true;
-  }
-
-  WS_LOGDEBUG4("[handleWebsocketWaitFor] Client: ", client->num, ", size:", size);
-  WS_LOGDEBUG2("cWsRXsize:", client->cWsRXsize);
-
-
-  readCb(client, &client->cWsHeader[client->cWsRXsize], (size - client->cWsRXsize),
-         std::bind([](WebSockets * server, size_t size, WSclient_t * client, bool ok)
-  {
-    WS_LOGDEBUG4("[handleWebsocketWaitFor][readCb] Client: ", client->num, ", size:", size);
-    WS_LOGDEBUG2("ok:", ok);
-
-    if (ok)
-    {
-      client->cWsRXsize = size;
-      server->handleWebsocketCb(client);
+bool WebSockets::handleWebsocketWaitFor(WSclient_t *client, size_t size) {
+    if (!client->tcp || !client->tcp->connected()) {
+        return false;
     }
-    else
-    {
-      WS_LOGDEBUG2("[readCb] failed. Client:", client->num);
 
-      client->cWsRXsize = 0;
-      // timeout or error
-      server->clientDisconnect(client, 1002);
+    if (size > WEBSOCKETS_MAX_HEADER_SIZE) {
+        WS_LOGDEBUG4("[handleWebsocketWaitFor] Client: ", client->num, ", size too big:", size);
+
+        return false;
     }
-  },
-  this, size, std::placeholders::_1, std::placeholders::_2));
 
-  return false;
+    if (client->cWsRXsize >= size) {
+        return true;
+    }
+
+    WS_LOGDEBUG4("[handleWebsocketWaitFor] Client: ", client->num, ", size:", size);
+    WS_LOGDEBUG2("cWsRXsize:", client->cWsRXsize);
+
+    readCb(client, &client->cWsHeader[client->cWsRXsize], (size - client->cWsRXsize),
+           std::bind(
+               [](WebSockets *server, size_t size, WSclient_t *client, bool ok) {
+                   WS_LOGDEBUG4("[handleWebsocketWaitFor][readCb] Client: ", client->num,
+                                ", size:", size);
+                   WS_LOGDEBUG2("ok:", ok);
+
+                   if (ok) {
+                       client->cWsRXsize = size;
+                       server->handleWebsocketCb(client);
+                   } else {
+                       WS_LOGDEBUG2("[readCb] failed. Client:", client->num);
+
+                       client->cWsRXsize = 0;
+                       // timeout or error
+                       server->clientDisconnect(client, 1002);
+                   }
+               },
+               this, size, std::placeholders::_1, std::placeholders::_2));
+
+    return false;
 }
 
-
-void WebSockets::handleWebsocketCb(WSclient_t * client)
-{
-  if (!client->tcp || !client->tcp->connected())
-  {
-    return;
-  }
-
-  uint8_t * buffer = client->cWsHeader;
-
-  WSMessageHeader_t * header = &client->cWsHeaderDecode;
-  uint8_t * payload          = NULL;
-
-  uint8_t headerLen = 2;
-
-  if (!handleWebsocketWaitFor(client, headerLen))
-  {
-    return;
-  }
-
-  // split first 2 bytes in the data
-  header->fin    = ((*buffer >> 7) & 0x01);
-  header->rsv1   = ((*buffer >> 6) & 0x01);
-  header->rsv2   = ((*buffer >> 5) & 0x01);
-  header->rsv3   = ((*buffer >> 4) & 0x01);
-  header->opCode = (WSopcode_t)(*buffer & 0x0F);
-  buffer++;
-
-  header->mask       = ((*buffer >> 7) & 0x01);
-  header->payloadLen = (WSopcode_t)(*buffer & 0x7F);
-  buffer++;
-
-  if (header->payloadLen == 126)
-  {
-    headerLen += 2;
-
-    if (!handleWebsocketWaitFor(client, headerLen))
-    {
-      return;
+void WebSockets::handleWebsocketCb(WSclient_t *client) {
+    if (!client->tcp || !client->tcp->connected()) {
+        return;
     }
 
-    header->payloadLen = buffer[0] << 8 | buffer[1];
-    buffer += 2;
-  }
-  else if (header->payloadLen == 127)
-  {
-    headerLen += 8;
+    uint8_t *buffer = client->cWsHeader;
 
-    // read 64bit integer as length
-    if (!handleWebsocketWaitFor(client, headerLen))
-    {
-      return;
+    WSMessageHeader_t *header = &client->cWsHeaderDecode;
+    uint8_t *payload          = NULL;
+
+    uint8_t headerLen = 2;
+
+    if (!handleWebsocketWaitFor(client, headerLen)) {
+        return;
     }
 
-    if (buffer[0] != 0 || buffer[1] != 0 || buffer[2] != 0 || buffer[3] != 0)
-    {
-      // really too big!
-      header->payloadLen = 0xFFFFFFFF;
-    }
-    else
-    {
-      header->payloadLen = buffer[4] << 24 | buffer[5] << 16 | buffer[6] << 8 | buffer[7];
-    }
+    // split first 2 bytes in the data
+    header->fin    = ((*buffer >> 7) & 0x01);
+    header->rsv1   = ((*buffer >> 6) & 0x01);
+    header->rsv2   = ((*buffer >> 5) & 0x01);
+    header->rsv3   = ((*buffer >> 4) & 0x01);
+    header->opCode = (WSopcode_t)(*buffer & 0x0F);
+    buffer++;
 
-    buffer += 8;
-  }
+    header->mask       = ((*buffer >> 7) & 0x01);
+    header->payloadLen = (WSopcode_t)(*buffer & 0x7F);
+    buffer++;
 
-  WS_LOGDEBUG2("[handleWebsocket] ------- read massage frame ------- Client:", client->num);
+    if (header->payloadLen == 126) {
+        headerLen += 2;
 
-  WS_LOGDEBUG4("[handleWebsocket] Client: ", client->num, ", fin:", header->fin);
-  WS_LOGDEBUG2("rsv1:",    header->rsv1);
-  WS_LOGDEBUG2("rsv2:",    header->rsv2);
-  WS_LOGDEBUG2("rsv3:",    header->rsv3);
-  WS_LOGDEBUG2("opCode:",  header->opCode);
+        if (!handleWebsocketWaitFor(client, headerLen)) {
+            return;
+        }
 
-  WS_LOGDEBUG4("[handleWebsocket] Client: ", client->num, ", mask:", header->mask);
-  WS_LOGDEBUG2("payloadLen:", header->payloadLen);
+        header->payloadLen = buffer[0] << 8 | buffer[1];
+        buffer += 2;
+    } else if (header->payloadLen == 127) {
+        headerLen += 8;
 
-  if (header->payloadLen > WEBSOCKETS_MAX_DATA_SIZE)
-  {
-    WS_LOGDEBUG4("[handleWebsocket] Client: ", client->num, ", payload too big:", header->payloadLen);
+        // read 64bit integer as length
+        if (!handleWebsocketWaitFor(client, headerLen)) {
+            return;
+        }
 
-    clientDisconnect(client, 1009);
+        if (buffer[0] != 0 || buffer[1] != 0 || buffer[2] != 0 || buffer[3] != 0) {
+            // really too big!
+            header->payloadLen = 0xFFFFFFFF;
+        } else {
+            header->payloadLen = buffer[4] << 24 | buffer[5] << 16 | buffer[6] << 8 | buffer[7];
+        }
 
-    return;
-  }
-
-  if (header->mask)
-  {
-    headerLen += 4;
-
-    if (!handleWebsocketWaitFor(client, headerLen))
-    {
-      return;
+        buffer += 8;
     }
 
-    header->maskKey = buffer;
-    buffer += 4;
-  }
+    WS_LOGDEBUG2("[handleWebsocket] ------- read massage frame ------- Client:", client->num);
 
-  if (header->payloadLen > 0)
-  {
-    // if text data we need one more
-    payload = (uint8_t *) malloc(header->payloadLen + 1);
+    WS_LOGDEBUG4("[handleWebsocket] Client: ", client->num, ", fin:", header->fin);
+    WS_LOGDEBUG2("rsv1:", header->rsv1);
+    WS_LOGDEBUG2("rsv2:", header->rsv2);
+    WS_LOGDEBUG2("rsv3:", header->rsv3);
+    WS_LOGDEBUG2("opCode:", header->opCode);
 
-    if (!payload)
-    {
-      WS_LOGDEBUG4("[handleWebsocket] Client: ", client->num, ", No memory to handle payload", header->payloadLen);
+    WS_LOGDEBUG4("[handleWebsocket] Client: ", client->num, ", mask:", header->mask);
+    WS_LOGDEBUG2("payloadLen:", header->payloadLen);
 
-      clientDisconnect(client, 1011);
+    if (header->payloadLen > WEBSOCKETS_MAX_DATA_SIZE) {
+        WS_LOGDEBUG4("[handleWebsocket] Client: ", client->num,
+                     ", payload too big:", header->payloadLen);
 
-      return;
+        clientDisconnect(client, 1009);
+
+        return;
     }
 
-    readCb(client, payload, header->payloadLen, std::bind(&WebSockets::handleWebsocketPayloadCb,
-                                                          this, std::placeholders::_1, std::placeholders::_2, payload));
-  }
-  else
-  {
-    handleWebsocketPayloadCb(client, true, NULL);
-  }
+    if (header->mask) {
+        headerLen += 4;
+
+        if (!handleWebsocketWaitFor(client, headerLen)) {
+            return;
+        }
+
+        header->maskKey = buffer;
+        buffer += 4;
+    }
+
+    if (header->payloadLen > 0) {
+        // if text data we need one more
+        payload = (uint8_t *)malloc(header->payloadLen + 1);
+
+        if (!payload) {
+            WS_LOGDEBUG4("[handleWebsocket] Client: ", client->num, ", No memory to handle payload",
+                         header->payloadLen);
+
+            clientDisconnect(client, 1011);
+
+            return;
+        }
+
+        readCb(client, payload, header->payloadLen,
+               std::bind(&WebSockets::handleWebsocketPayloadCb, this, std::placeholders::_1,
+                         std::placeholders::_2, payload));
+    } else {
+        handleWebsocketPayloadCb(client, true, NULL);
+    }
 }
 
+void WebSockets::handleWebsocketPayloadCb(WSclient_t *client, bool ok, uint8_t *payload) {
+    WSMessageHeader_t *header = &client->cWsHeaderDecode;
 
-void WebSockets::handleWebsocketPayloadCb(WSclient_t * client, bool ok, uint8_t * payload)
-{
-  WSMessageHeader_t * header = &client->cWsHeaderDecode;
+    if (ok) {
+        if (header->payloadLen > 0) {
+            payload[header->payloadLen] = 0x00;
 
-  if (ok)
-  {
-    if (header->payloadLen > 0)
-    {
-      payload[header->payloadLen] = 0x00;
-
-      if (header->mask)
-      {
-        //decode XOR
-        for (size_t i = 0; i < header->payloadLen; i++)
-        {
-          payload[i] = (payload[i] ^ header->maskKey[i % 4]);
-        }
-      }
-    }
-
-    switch (header->opCode)
-    {
-      case WSop_text:
-        WS_LOGDEBUG4("[handleWebsocketPayloadCb] Client: ", client->num, ", text:", (char *) payload);
-        messageReceived(client, header->opCode, payload, header->payloadLen, header->fin);
-        break;
-
-      case WSop_binary:
-      case WSop_continuation:
-        messageReceived(client, header->opCode, payload, header->payloadLen, header->fin);
-        break;
-
-      case WSop_ping:
-        // send pong back
-        WS_LOGDEBUG4("[handleWebsocketPayloadCb] Client: ", client->num,
-                      ", ping received", payload ? (const char *)payload : "");
-
-        sendFrame(client, WSop_pong, payload, header->payloadLen);
-        messageReceived(client, header->opCode, payload, header->payloadLen, header->fin);
-        break;
-
-      case WSop_pong:
-        WS_LOGDEBUG4("[handleWebsocketPayloadCb] Client: ", client->num,
-                      ", get pong", payload ? (const char *)payload : "");
-
-        client->pongReceived = true;
-        messageReceived(client, header->opCode, payload, header->payloadLen, header->fin);
-        break;
-
-      case WSop_close:
-      {
-        uint16_t reasonCode = 1000;
-
-        if (header->payloadLen >= 2)
-        {
-          reasonCode = payload[0] << 8 | payload[1];
+            if (header->mask) {
+                // decode XOR
+                for (size_t i = 0; i < header->payloadLen; i++) {
+                    payload[i] = (payload[i] ^ header->maskKey[i % 4]);
+                }
+            }
         }
 
-        WS_LOGDEBUG4("[handleWebsocketPayloadCb] Get ask for close. Client Num:", client->num, ", Code:", reasonCode);
+        switch (header->opCode) {
+            case WSop_text:
+                WS_LOGDEBUG4("[handleWebsocketPayloadCb] Client: ", client->num,
+                             ", text:", (char *)payload);
+                messageReceived(client, header->opCode, payload, header->payloadLen, header->fin);
+                break;
 
-        if (header->payloadLen > 2)
-        {
-          WS_LOGDEBUG2("Payload =", (char *) (payload + 2));
+            case WSop_binary:
+            case WSop_continuation:
+                messageReceived(client, header->opCode, payload, header->payloadLen, header->fin);
+                break;
+
+            case WSop_ping:
+                // send pong back
+                WS_LOGDEBUG4("[handleWebsocketPayloadCb] Client: ", client->num, ", ping received",
+                             payload ? (const char *)payload : "");
+
+                sendFrame(client, WSop_pong, payload, header->payloadLen);
+                messageReceived(client, header->opCode, payload, header->payloadLen, header->fin);
+                break;
+
+            case WSop_pong:
+                WS_LOGDEBUG4("[handleWebsocketPayloadCb] Client: ", client->num, ", get pong",
+                             payload ? (const char *)payload : "");
+
+                client->pongReceived = true;
+                messageReceived(client, header->opCode, payload, header->payloadLen, header->fin);
+                break;
+
+            case WSop_close: {
+                uint16_t reasonCode = 1000;
+
+                if (header->payloadLen >= 2) {
+                    reasonCode = payload[0] << 8 | payload[1];
+                }
+
+                WS_LOGDEBUG4("[handleWebsocketPayloadCb] Get ask for close. Client Num:",
+                             client->num, ", Code:", reasonCode);
+
+                if (header->payloadLen > 2) {
+                    WS_LOGDEBUG2("Payload =", (char *)(payload + 2));
+                }
+
+                clientDisconnect(client, 1000);
+            } break;
+
+            default:
+                WS_LOGDEBUG4("[WS][handleWebsocket] Got unknown opcode: Client =", client->num,
+                             ", opcode =", header->opCode);
+                clientDisconnect(client, 1002);
+                break;
         }
 
-        clientDisconnect(client, 1000);
-      }
-      break;
+        if (payload) {
+            free(payload);
+        }
 
-      default:
-        WS_LOGDEBUG4("[WS][handleWebsocket] Got unknown opcode: Client =", client->num, ", opcode =", header->opCode);
-        clientDisconnect(client, 1002);
-        break;
-    }
-
-    if (payload)
-    {
-      free(payload);
-    }
-
-    // reset input
-    client->cWsRXsize = 0;
+        // reset input
+        client->cWsRXsize = 0;
 
 #if (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC)
-    //register callback for next message
-    handleWebsocketWaitFor(client, 2);
+        // register callback for next message
+        handleWebsocketWaitFor(client, 2);
 #endif
 
-  }
-  else
-  {
-    WS_LOGDEBUG2("[handleWebsocket] Missing data!. Client:", client->num);
+    } else {
+        WS_LOGDEBUG2("[handleWebsocket] Missing data!. Client:", client->num);
 
-    free(payload);
-    clientDisconnect(client, 1002);
-  }
+        free(payload);
+        clientDisconnect(client, 1002);
+    }
 }
-
 
 /**
    generate the key for Sec-WebSocket-Accept
    @param clientKey String
    @return String Accept Key
 */
-String WebSockets::acceptKey(String & clientKey)
-{
-  uint8_t sha1HashBin[20] = { 0 };
+String WebSockets::acceptKey(String &clientKey) {
+    uint8_t sha1HashBin[20] = {0};
 
 #ifdef ESP8266
-  sha1(clientKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", &sha1HashBin[0]);
+    sha1(clientKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", &sha1HashBin[0]);
 #elif defined(ESP32)
-  String data = clientKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-  esp_sha(SHA1, (unsigned char *)data.c_str(), data.length(), &sha1HashBin[0]);
+    String data = clientKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    esp_sha(SHA1, (unsigned char *)data.c_str(), data.length(), &sha1HashBin[0]);
 #else
-  clientKey += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-  SHA1_CTX ctx;
-  SHA1Init(&ctx);
-  SHA1Update(&ctx, (const unsigned char *)clientKey.c_str(), clientKey.length());
-  SHA1Final(&sha1HashBin[0], &ctx);
+    clientKey += "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    SHA1_CTX ctx;
+    SHA1Init(&ctx);
+    SHA1Update(&ctx, (const unsigned char *)clientKey.c_str(), clientKey.length());
+    SHA1Final(&sha1HashBin[0], &ctx);
 #endif
 
-  String key = base64_encode(sha1HashBin, 20);
-  key.trim();
+    String key = base64_encode(sha1HashBin, 20);
+    key.trim();
 
-  return key;
+    return key;
 }
-
 
 /**
    base64_encode
@@ -798,38 +700,35 @@ String WebSockets::acceptKey(String & clientKey)
    @param length size_t
    @return base64 encoded String
 */
-String WebSockets::base64_encode(uint8_t * data, size_t length)
-{
-  size_t size   = ((length * 1.6f) + 1);
-  char * buffer = (char *) malloc(size);
+String WebSockets::base64_encode(uint8_t *data, size_t length) {
+    size_t size  = ((length * 1.6f) + 1);
+    char *buffer = (char *)malloc(size);
 
-  //WS_LOGDEBUG4("[base64_encode] length:", length, ", size:", size);
+    // WS_LOGDEBUG4("[base64_encode] length:", length, ", size:", size);
 
-  if (buffer)
-  {
-    base64_encodestate _state;
+    if (buffer) {
+        base64_encodestate _state;
 
-    base64_init_encodestate(&_state);
+        base64_init_encodestate(&_state);
 
-    int len = base64_encode_block((const char *)&data[0], length, &buffer[0], &_state);
+        int len = base64_encode_block((const char *)&data[0], length, &buffer[0], &_state);
 
-    //WS_LOGDEBUG2("[base64_encode] #1 len:", len);
+        // WS_LOGDEBUG2("[base64_encode] #1 len:", len);
 
-    len = base64_encode_blockend((buffer + len), &_state);
-    //WS_LOGDEBUG2("[base64_encode] #2 len:", len);
+        len = base64_encode_blockend((buffer + len), &_state);
+        // WS_LOGDEBUG2("[base64_encode] #2 len:", len);
 
-    String base64 = String(buffer);
+        String base64 = String(buffer);
 
-    //WS_LOGDEBUG4("[base64_encode] base64:", base64, ", buffer:", buffer);
+        // WS_LOGDEBUG4("[base64_encode] base64:", base64, ", buffer:", buffer);
 
-    free(buffer);
+        free(buffer);
 
-    return base64;
-  }
+        return base64;
+    }
 
-  return String("-FAIL-");
+    return String("-FAIL-");
 }
-
 
 /**
    read x byte from tcp or get timeout
@@ -838,110 +737,96 @@ String WebSockets::base64_encode(uint8_t * data, size_t length)
    @param n size_t byte count
    @return true if ok
 */
-bool WebSockets::readCb(WSclient_t * client, uint8_t * out, size_t n, WSreadWaitCb cb)
-{
-  UNUSED (out);
-  UNUSED (n);
-  UNUSED (cb);
-  UNUSED (client);
+bool WebSockets::readCb(WSclient_t *client, uint8_t *out, size_t n, WSreadWaitCb cb) {
+    UNUSED(out);
+    UNUSED(n);
+    UNUSED(cb);
+    UNUSED(client);
 
 #if (WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC)
 
-  if (!client->tcp || !client->tcp->connected())
-  {
-    return false;
-  }
-
-  client->tcp->readBytes(out, n, std::bind([](WSclient_t * client, bool ok, WSreadWaitCb cb)
-  {
-    UNUSED (client);
-
-    if (cb)
-    {
-      cb(client, ok);
+    if (!client->tcp || !client->tcp->connected()) {
+        return false;
     }
-  }, client, std::placeholders::_1, cb));
 
+    client->tcp->readBytes(out, n,
+                           std::bind(
+                               [](WSclient_t *client, bool ok, WSreadWaitCb cb) {
+                                   UNUSED(client);
+
+                                   if (cb) {
+                                       cb(client, ok);
+                                   }
+                               },
+                               client, std::placeholders::_1, cb));
 
 #else
 
-  unsigned long t = millis();
-  ssize_t len;
+    unsigned long t = millis();
+    ssize_t len;
 
-  WS_LOGDEBUG4("[readCb] n:", n, ", t:", t);
+    WS_LOGDEBUG4("[readCb] n:", n, ", t:", t);
 
-  while (n > 0)
-  {
-    if (client->tcp == NULL)
-    {
-      WS_LOGDEBUG("[readCb] Null tcp!");
+    while (n > 0) {
+        if (client->tcp == NULL) {
+            WS_LOGDEBUG("[readCb] Null tcp!");
 
-      if (cb)
-      {
-        cb(client, false);
-      }
+            if (cb) {
+                cb(client, false);
+            }
 
-      return false;
+            return false;
+        }
+
+        if (!client->tcp->connected()) {
+            WS_LOGDEBUG("[readCb] Not connected!");
+
+            if (cb) {
+                cb(client, false);
+            }
+
+            return false;
+        }
+
+        if ((millis() - t) > WEBSOCKETS_TCP_TIMEOUT) {
+            WS_LOGDEBUG2("[readCb] TIMEOUT (ms):", (millis() - t));
+
+            if (cb) {
+                cb(client, false);
+            }
+
+            return false;
+        }
+
+        if (!client->tcp->available()) {
+            WEBSOCKETS_YIELD_MORE();
+            continue;
+        }
+
+        len = client->tcp->read((uint8_t *)out, n);
+
+        if (len > 0) {
+            t = millis();
+            out += len;
+            n -= len;
+        }
+
+        WS_LOGDEBUG4("[readCb] Receive Length =", len, ", left =", n);
+
+        if (n > 0) {
+            WEBSOCKETS_YIELD();
+        }
     }
 
-    if (!client->tcp->connected())
-    {
-      WS_LOGDEBUG("[readCb] Not connected!");
-
-      if (cb)
-      {
-        cb(client, false);
-      }
-
-      return false;
+    if (cb) {
+        cb(client, true);
     }
 
-    if ((millis() - t) > WEBSOCKETS_TCP_TIMEOUT)
-    {
-      WS_LOGDEBUG2("[readCb] TIMEOUT (ms):", (millis() - t));
-
-      if (cb)
-      {
-        cb(client, false);
-      }
-
-      return false;
-    }
-
-    if (!client->tcp->available())
-    {
-      WEBSOCKETS_YIELD_MORE();
-      continue;
-    }
-
-    len = client->tcp->read((uint8_t *)out, n);
-
-    if (len > 0)
-    {
-      t    = millis();
-      out += len;
-      n   -= len;
-    }
-
-    WS_LOGDEBUG4("[readCb] Receive Length =", len, ", left =", n);
-
-    if (n > 0)
-    {
-      WEBSOCKETS_YIELD();
-    }
-  }
-
-  if (cb)
-  {
-    cb(client, true);
-  }
-
-  WEBSOCKETS_YIELD();
+    WEBSOCKETS_YIELD();
 #endif
 
-  return true;
+    return true;
 }
-
 
 /**
    write x byte to tcp or get timeout
@@ -950,79 +835,67 @@ bool WebSockets::readCb(WSclient_t * client, uint8_t * out, size_t n, WSreadWait
    @param n size_t byte count
    @return bytes send
 */
-size_t WebSockets::write(WSclient_t * client, uint8_t * out, size_t n)
-{
-  if (out == NULL)
-    return 0;
+size_t WebSockets::write(WSclient_t *client, uint8_t *out, size_t n) {
+    if (out == NULL)
+        return 0;
 
-  if (client == NULL)
-    return 0;
+    if (client == NULL)
+        return 0;
 
-  unsigned long t = millis();
-  size_t len      = 0;
-  size_t total    = 0;
+    unsigned long t = millis();
+    size_t len      = 0;
+    size_t total    = 0;
 
-  WS_LOGDEBUG4("[write] n:", n, ", t:", t);
+    WS_LOGDEBUG4("[write] n:", n, ", t:", t);
 
-  while (n > 0)
-  {
-    if (client->tcp == NULL)
-    {
-      WS_LOGDEBUG("[write] Null tcp!");
-      break;
+    while (n > 0) {
+        if (client->tcp == NULL) {
+            WS_LOGDEBUG("[write] Null tcp!");
+            break;
+        }
+
+        if (!client->tcp->connected()) {
+            WS_LOGDEBUG("[write] Not connected!");
+            break;
+        }
+
+        if ((millis() - t) > WEBSOCKETS_TCP_TIMEOUT) {
+            WS_LOGDEBUG2("[write] TIMEOUT (ms):", (millis() - t));
+            break;
+        }
+
+        len = client->tcp->write((const uint8_t *)out, n);
+
+        if (len) {
+            t = millis();
+            out += len;
+            n -= len;
+            total += len;
+
+            WS_LOGDEBUG4("[write] Write, Length :", len, ", Left :", n);
+        } else {
+            WS_LOGDEBUG4("[write] Failed Write, Length :", len, ", Left :", n);
+        }
+
+        if (n > 0) {
+            WEBSOCKETS_YIELD();
+        }
     }
 
-    if (!client->tcp->connected())
-    {
-      WS_LOGDEBUG("[write] Not connected!");
-      break;
-    }
+    WEBSOCKETS_YIELD();
 
-    if ((millis() - t) > WEBSOCKETS_TCP_TIMEOUT)
-    {
-      WS_LOGDEBUG2("[write] TIMEOUT (ms):", (millis() - t));
-      break;
-    }
-
-    len = client->tcp->write((const uint8_t *)out, n);
-
-    if (len)
-    {
-      t      = millis();
-      out   += len;
-      n     -= len;
-      total += len;
-
-      WS_LOGDEBUG4("[write] Write, Length :", len, ", Left :", n);
-    }
-    else
-    {
-      WS_LOGDEBUG4("[write] Failed Write, Length :", len, ", Left :", n);
-    }
-
-    if (n > 0)
-    {
-      WEBSOCKETS_YIELD();
-    }
-  }
-
-  WEBSOCKETS_YIELD();
-
-  return total;
+    return total;
 }
 
+size_t WebSockets::write(WSclient_t *client, const char *out) {
+    if (client == NULL)
+        return 0;
 
-size_t WebSockets::write(WSclient_t * client, const char * out)
-{
-  if (client == NULL)
-    return 0;
+    if (out == NULL)
+        return 0;
 
-  if (out == NULL)
-    return 0;
-
-  return write(client, (uint8_t *)out, strlen(out));
+    return write(client, (uint8_t *)out, strlen(out));
 }
-
 
 /**
    enable ping/pong heartbeat process
@@ -1031,55 +904,50 @@ size_t WebSockets::write(WSclient_t * client, const char * out)
    @param pongTimeout uint32_t millis after which pong should timout if not received
    @param disconnectTimeoutCount uint8_t how many timeouts before disconnect, 0=> do not disconnect
 */
-void WebSockets::enableHeartbeat(WSclient_t * client, const uint32_t& pingInterval, const uint32_t& pongTimeout,
-                                 const uint8_t& disconnectTimeoutCount)
-{
-  if (client == NULL)
-    return;
+void WebSockets::enableHeartbeat(WSclient_t *client, const uint32_t &pingInterval,
+                                 const uint32_t &pongTimeout,
+                                 const uint8_t &disconnectTimeoutCount) {
+    if (client == NULL)
+        return;
 
-  client->pingInterval           = pingInterval;
-  client->pongTimeout            = pongTimeout;
-  client->disconnectTimeoutCount = disconnectTimeoutCount;
-  client->pongReceived           = false;
+    client->pingInterval           = pingInterval;
+    client->pongTimeout            = pongTimeout;
+    client->disconnectTimeoutCount = disconnectTimeoutCount;
+    client->pongReceived           = false;
 }
-
 
 /**
    handle ping/pong heartbeat timeout process
    @param client WSclient_t
 */
-void WebSockets::handleHBTimeout(WSclient_t * client)
-{
-  if (client->pingInterval)
-  {
-    // if heartbeat is enabled
-    uint32_t pi = millis() - client->lastPing;
+void WebSockets::handleHBTimeout(WSclient_t *client) {
+    if (client->pingInterval) {
+        // if heartbeat is enabled
+        uint32_t pi = millis() - client->lastPing;
 
-    if (client->pongReceived)
-    {
-      client->pongTimeoutCount = 0;
-    }
-    else
-    {
-      if (pi > client->pongTimeout)
-      {
-        // pong not received in time
-        client->pongTimeoutCount++;
-        client->lastPing = millis() - client->pingInterval - 500;    // force ping on the next run
+        if (client->pongReceived) {
+            client->pongTimeoutCount = 0;
+        } else {
+            if (pi > client->pongTimeout) {
+                // pong not received in time
+                client->pongTimeoutCount++;
+                client->lastPing =
+                    millis() - client->pingInterval - 500; // force ping on the next run
 
-        WS_LOGDEBUG4("[HBtimeout] pong TIMEOUT! lp=", client->lastPing, ", millis=",  millis());
-        WS_LOGDEBUG4("[HBtimeout] pong TIMEOUT! pi=", pi, ", count=", client->pongTimeoutCount);
+                WS_LOGDEBUG4("[HBtimeout] pong TIMEOUT! lp=", client->lastPing,
+                             ", millis=", millis());
+                WS_LOGDEBUG4("[HBtimeout] pong TIMEOUT! pi=", pi,
+                             ", count=", client->pongTimeoutCount);
 
-        if (client->disconnectTimeoutCount && client->pongTimeoutCount >= client->disconnectTimeoutCount)
-        {
-          WS_LOGDEBUG2("[HBtimeout] DISCONNECTING, count=", client->pongTimeoutCount);
+                if (client->disconnectTimeoutCount &&
+                    client->pongTimeoutCount >= client->disconnectTimeoutCount) {
+                    WS_LOGDEBUG2("[HBtimeout] DISCONNECTING, count=", client->pongTimeoutCount);
 
-          clientDisconnect(client);
+                    clientDisconnect(client);
+                }
+            }
         }
-      }
     }
-  }
 }
 
-
-#endif    // WEBSOCKETS_GENERIC_IMPL_H_
+#endif // WEBSOCKETS_GENERIC_IMPL_H_

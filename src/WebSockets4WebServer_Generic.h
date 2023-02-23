@@ -52,65 +52,59 @@
 #ifndef __WEBSOCKETS4WEBSERVER_GENERIC_H
 #define __WEBSOCKETS4WEBSERVER_GENERIC_H
 
-#include <WebSocketsServer_Generic.h>
 #include <ESP8266WebServer.h>
+#include <WebSocketsServer_Generic.h>
 
 #if WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266 && WEBSERVER_HAS_HOOK
 
-class WebSockets4WebServer : public WebSocketsServerCore
-{
+class WebSockets4WebServer : public WebSocketsServerCore {
   public:
-
-    WebSockets4WebServer(const String & origin = "", const String & protocol = "arduino")
-      : WebSocketsServerCore(origin, protocol)
-    {
-      begin();
+    WebSockets4WebServer(const String &origin = "", const String &protocol = "arduino")
+        : WebSocketsServerCore(origin, protocol) {
+        begin();
     }
 
-    ESP8266WebServer::HookFunction hookForWebserver(const String & wsRootDir, WebSocketServerEvent event)
-    {
-      onEvent(event);
+    ESP8266WebServer::HookFunction hookForWebserver(const String &wsRootDir,
+                                                    WebSocketServerEvent event) {
+        onEvent(event);
 
-      return [&, wsRootDir](const String & method, const String & url, WiFiClient * tcpClient,
-                            ESP8266WebServer::ContentTypeFunction contentType)
-      {
-        UNUSED (contentType);
+        return [&, wsRootDir](const String &method, const String &url, WiFiClient *tcpClient,
+                              ESP8266WebServer::ContentTypeFunction contentType) {
+            UNUSED(contentType);
 
-        if (!(method == "GET" && url.indexOf(wsRootDir) == 0))
-        {
-          return ESP8266WebServer::CLIENT_REQUEST_CAN_CONTINUE;
-        }
+            if (!(method == "GET" && url.indexOf(wsRootDir) == 0)) {
+                return ESP8266WebServer::CLIENT_REQUEST_CAN_CONTINUE;
+            }
 
-        // allocate a WiFiClient copy (like in WebSocketsServer::handleNewClients())
-        WEBSOCKETS_NETWORK_CLASS * newTcpClient = new WEBSOCKETS_NETWORK_CLASS(*tcpClient);
+            // allocate a WiFiClient copy (like in WebSocketsServer::handleNewClients())
+            WEBSOCKETS_NETWORK_CLASS *newTcpClient = new WEBSOCKETS_NETWORK_CLASS(*tcpClient);
 
-        // Then initialize a new WSclient_t (like in WebSocketsServer::handleNewClient())
-        WSclient_t * client = handleNewClient(newTcpClient);
+            // Then initialize a new WSclient_t (like in WebSocketsServer::handleNewClient())
+            WSclient_t *client = handleNewClient(newTcpClient);
 
-        if (client)
-        {
-          // give "GET <url>"
-          String headerLine;
-          headerLine.reserve(url.length() + 5);
-          headerLine = "GET ";
-          headerLine += url;
-          handleHeader(client, &headerLine);
-        }
+            if (client) {
+                // give "GET <url>"
+                String headerLine;
+                headerLine.reserve(url.length() + 5);
+                headerLine = "GET ";
+                headerLine += url;
+                handleHeader(client, &headerLine);
+            }
 
-        // tell webserver to not close but forget about this client
-        return ESP8266WebServer::CLIENT_IS_GIVEN;
-      };
+            // tell webserver to not close but forget about this client
+            return ESP8266WebServer::CLIENT_IS_GIVEN;
+        };
     }
 };
 
-#else    // WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266 && WEBSERVER_HAS_HOOK
+#else // WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266 && WEBSERVER_HAS_HOOK
 
 #ifndef WEBSERVER_HAS_HOOK
-  #error Your current Framework / Arduino core version does not support Webserver Hook Functions
+#error Your current Framework / Arduino core version does not support Webserver Hook Functions
 #else
-  #error Your Hardware Platform does not support Webserver Hook Functions
+#error Your Hardware Platform does not support Webserver Hook Functions
 #endif
 
-#endif    // WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266 && WEBSERVER_HAS_HOOK
+#endif // WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266 && WEBSERVER_HAS_HOOK
 
-#endif    // __WEBSOCKETS4WEBSERVER_GENERIC_H
+#endif // __WEBSOCKETS4WEBSERVER_GENERIC_H

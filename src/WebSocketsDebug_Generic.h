@@ -53,9 +53,9 @@
 #include <stdio.h>
 
 #ifdef WS_DEBUG_WEBSOCKETS_PORT
-  #define WS_DEBUG_PORT      WS_DEBUG_WEBSOCKETS_PORT
+#define WS_DEBUG_PORT WS_DEBUG_WEBSOCKETS_PORT
 #else
-  #define WS_DEBUG_PORT      Serial
+#define WS_DEBUG_PORT Serial
 #endif
 
 // Change WS_LOG_LEVEL to set tracing and logging verbosity
@@ -66,34 +66,121 @@
 // 4: DEBUG: errors, warnings, informational and debug
 
 #ifndef WS_LOG_LEVEL
-  #define WS_LOG_LEVEL       0
+#define WS_LOG_LEVEL 0
 #endif
 
 const char WS_MARK[] = "[WS] ";
-#define WS_PRINT_MARK   WS_PRINT(WS_MARK)
+#define WS_PRINT_MARK WS_PRINT(WS_MARK)
 
-#define WS_PRINT        WS_DEBUG_PORT.print
-#define WS_PRINTLN      WS_DEBUG_PORT.println
+#define WS_PRINT WS_DEBUG_PORT.print
+#define WS_PRINTLN WS_DEBUG_PORT.println
 
-#define WS_LOGERROR(x)         if(WS_LOG_LEVEL>0) { WS_PRINT_MARK; WS_PRINTLN(x); }
-#define WS_LOGERROR2(x,y)      if(WS_LOG_LEVEL>0) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINTLN(y); }
-#define WS_LOGERROR3(x,y,z)    if(WS_LOG_LEVEL>0) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINT(y); WS_PRINTLN(z); }
-#define WS_LOGERROR4(x,y,z,w)  if(WS_LOG_LEVEL>0) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINT(y); WS_PRINT(z); WS_PRINTLN(w); }
+#define WS_LOGERROR(x)                                                                             \
+    if (WS_LOG_LEVEL > 0) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINTLN(x);                                                                             \
+    }
+#define WS_LOGERROR2(x, y)                                                                         \
+    if (WS_LOG_LEVEL > 0) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINTLN(y);                                                                             \
+    }
+#define WS_LOGERROR3(x, y, z)                                                                      \
+    if (WS_LOG_LEVEL > 0) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINT(y);                                                                               \
+        WS_PRINTLN(z);                                                                             \
+    }
+#define WS_LOGERROR4(x, y, z, w)                                                                   \
+    if (WS_LOG_LEVEL > 0) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINT(y);                                                                               \
+        WS_PRINT(z);                                                                               \
+        WS_PRINTLN(w);                                                                             \
+    }
 
-#define WS_LOGWARN(x)          if(WS_LOG_LEVEL>1) { WS_PRINT_MARK; WS_PRINTLN(x); }
-#define WS_LOGWARN2(x,y)       if(WS_LOG_LEVEL>1) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINTLN(y); }
-#define WS_LOGWARN3(x,y,z)     if(WS_LOG_LEVEL>1) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINT(y); WS_PRINTLN(z); }
-#define WS_LOGWARN4(x,y,z,w)   if(WS_LOG_LEVEL>1) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINT(y); WS_PRINT(z);  WS_PRINTLN(w); }
+#define WS_LOGWARN(x)                                                                              \
+    if (WS_LOG_LEVEL > 1) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINTLN(x);                                                                             \
+    }
+#define WS_LOGWARN2(x, y)                                                                          \
+    if (WS_LOG_LEVEL > 1) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINTLN(y);                                                                             \
+    }
+#define WS_LOGWARN3(x, y, z)                                                                       \
+    if (WS_LOG_LEVEL > 1) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINT(y);                                                                               \
+        WS_PRINTLN(z);                                                                             \
+    }
+#define WS_LOGWARN4(x, y, z, w)                                                                    \
+    if (WS_LOG_LEVEL > 1) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINT(y);                                                                               \
+        WS_PRINT(z);                                                                               \
+        WS_PRINTLN(w);                                                                             \
+    }
 
-#define WS_LOGINFO(x)          if(WS_LOG_LEVEL>2) { WS_PRINT_MARK; WS_PRINTLN(x); }
-#define WS_LOGINFO2(x,y)       if(WS_LOG_LEVEL>2) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINTLN(y); }
-#define WS_LOGINFO3(x,y,z)     if(WS_LOG_LEVEL>2) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINT(y); WS_PRINTLN(z); }
-#define WS_LOGINFO4(x,y,z,w)   if(WS_LOG_LEVEL>2) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINT(y); WS_PRINT(z); WS_PRINTLN(w); }
+#define WS_LOGINFO(x)                                                                              \
+    if (WS_LOG_LEVEL > 2) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINTLN(x);                                                                             \
+    }
+#define WS_LOGINFO2(x, y)                                                                          \
+    if (WS_LOG_LEVEL > 2) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINTLN(y);                                                                             \
+    }
+#define WS_LOGINFO3(x, y, z)                                                                       \
+    if (WS_LOG_LEVEL > 2) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINT(y);                                                                               \
+        WS_PRINTLN(z);                                                                             \
+    }
+#define WS_LOGINFO4(x, y, z, w)                                                                    \
+    if (WS_LOG_LEVEL > 2) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINT(y);                                                                               \
+        WS_PRINT(z);                                                                               \
+        WS_PRINTLN(w);                                                                             \
+    }
 
-#define WS_LOGDEBUG(x)         if(WS_LOG_LEVEL>3) { WS_PRINT_MARK; WS_PRINTLN(x); }
-#define WS_LOGDEBUG2(x,y)      if(WS_LOG_LEVEL>3) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINTLN(y); }
-#define WS_LOGDEBUG3(x,y,z)    if(WS_LOG_LEVEL>3) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINT(y); WS_PRINTLN(z); }
-#define WS_LOGDEBUG4(x,y,z,w)  if(WS_LOG_LEVEL>3) { WS_PRINT_MARK; WS_PRINT(x); WS_PRINT(y); WS_PRINT(z); WS_PRINTLN(w); }
+#define WS_LOGDEBUG(x)                                                                             \
+    if (WS_LOG_LEVEL > 3) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINTLN(x);                                                                             \
+    }
+#define WS_LOGDEBUG2(x, y)                                                                         \
+    if (WS_LOG_LEVEL > 3) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINTLN(y);                                                                             \
+    }
+#define WS_LOGDEBUG3(x, y, z)                                                                      \
+    if (WS_LOG_LEVEL > 3) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINT(y);                                                                               \
+        WS_PRINTLN(z);                                                                             \
+    }
+#define WS_LOGDEBUG4(x, y, z, w)                                                                   \
+    if (WS_LOG_LEVEL > 3) {                                                                        \
+        WS_PRINT_MARK;                                                                             \
+        WS_PRINT(x);                                                                               \
+        WS_PRINT(y);                                                                               \
+        WS_PRINT(z);                                                                               \
+        WS_PRINTLN(w);                                                                             \
+    }
 
-#endif    // WEBSOCKETS_DEBUG_GENERIC_H_
-
+#endif // WEBSOCKETS_DEBUG_GENERIC_H_

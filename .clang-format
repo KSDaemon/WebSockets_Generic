@@ -8,3 +8,6 @@ PenaltyReturnTypeOnItsOwnLine: 10000
 #AllowAllParametersOfDeclarationOnNextLine: false
 IndentCaseLabels: true
 ColumnLimit: 100
+#IndentPPDirectives: BeforeHash
+AlignConsecutiveAssignments: AcrossComments
+SpaceAfterCStyleCast: false
