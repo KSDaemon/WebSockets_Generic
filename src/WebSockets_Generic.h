@@ -60,7 +60,7 @@
 
 #define WEBSOCKETS_GENERIC_VERSION_INT 2016001
 
-#include "WebSocketsDebug_Generic.h"
+#include "debug_macros.h"
 
 #ifdef STM32_DEVICE
 #include <application.h>
