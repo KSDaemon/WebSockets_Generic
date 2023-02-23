@@ -1,0 +1,10 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+Language: Cpp
+AlwaysBreakTemplateDeclarations: Yes
+AlwaysBreakAfterReturnType: None
+AlwaysBreakAfterDefinitionReturnType: None
+PenaltyReturnTypeOnItsOwnLine: 10000
+#AllowAllParametersOfDeclarationOnNextLine: false
+IndentCaseLabels: true
+ColumnLimit: 100
