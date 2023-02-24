@@ -63,6 +63,7 @@ WebSocketsClient::WebSocketsClient() {
 
     _port = 0;
     _host = "";
+    _noReconnect = false;
 }
 
 WebSocketsClient::~WebSocketsClient() { disconnect(); }
@@ -74,23 +75,18 @@ void WebSocketsClient::begin(const char *host, const uint16_t &port, const char 
                              const char *protocol) {
     _host = host;
     _port = port;
+    _noReconnect = false;
 
 #if defined(HAS_SSL)
-
     _fingerprint = SSL_FINGERPRINT_NULL;
-
     _CA_cert = NULL;
-
+    _client.isSSL = false;
+    _client.ssl   = NULL;
 #endif
 
     _client.num    = 0;
     _client.status = WSC_NOT_CONNECTED;
     _client.tcp    = NULL;
-
-#if defined(HAS_SSL)
-    _client.isSSL = false;
-    _client.ssl   = NULL;
-#endif
 
     _client.cUrl                = url;
     _client.cCode               = 0;
@@ -302,11 +298,16 @@ void WebSocketsClient::beginSocketIOSSLWithCA(const char *host, const uint16_t &
 #if (WS_LOG_LEVEL > 3)
 #warning WEBSOCKETS_NETWORK_TYPE != NETWORK ASYNC
 #endif
+
 /**
-   called in arduino loop
-*/
+ * Must be called in Arduino loop
+ */
 void WebSocketsClient::loop() {
     if (_port == 0) {
+        return;
+    }
+
+    if (_noReconnect) {
         return;
     }
 
@@ -580,6 +581,7 @@ bool WebSocketsClient::sendPing(const String &payload) {
    @param num uint8_t client id
 */
 void WebSocketsClient::disconnect() {
+    _noReconnect = true;
     if (clientIsConnected(&_client)) {
         WebSockets::clientDisconnect(&_client, 1000);
     }
@@ -742,32 +744,23 @@ void WebSocketsClient::clientDisconnect(WSclient_t *client) {
 /**
    get client state
    @param client WSclient_t *  ptr to the client struct
-   @return true = conneted
+   @return true = connected
 */
 bool WebSocketsClient::clientIsConnected(WSclient_t *client) {
     if (!client->tcp) {
         return false;
     }
 
-    if (client->tcp->connected()) {
-        if (client->status != WSC_NOT_CONNECTED) {
-            return true;
-        }
-    } else {
-        // client lost
-        if (client->status != WSC_NOT_CONNECTED) {
-            WS_LOGWARN("[WS-Client] connection lost.");
-
-            // do cleanup
-            clientDisconnect(client);
-        }
+    if (client->tcp->connected() && client->status != WSC_NOT_CONNECTED) {
+        return true;
     }
 
-    if (client->tcp) {
-        // do cleanup
-        clientDisconnect(client);
+    if (client->status != WSC_NOT_CONNECTED) {
+        WS_LOGWARN("[WS-Client] connection lost.");
     }
 
+    // do cleanup
+    clientDisconnect(client);
     return false;
 }
 
