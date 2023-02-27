@@ -27,3 +27,6 @@
 *.out
 *.app
 /tests/webSocketServer/node_modules
+
+build
+cmake-build-debug
