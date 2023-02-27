@@ -1059,7 +1059,7 @@ void WebSocketsClient::handleHeader(WSclient_t *client, String *headerLine) {
 
             headerDone(client);
 
-            runCbEvent(WStype_CONNECTED, (uint8_t *)client->cUrl.c_str(), client->cUrl.length());
+            runCbEvent(WStype_CONNECTED, (uint8_t *)client->cProtocol.c_str(), client->cProtocol.length());
         }
 
 #if !((WEBSOCKETS_NETWORK_TYPE == NETWORK_ESP8266_ASYNC) ||                                        \
