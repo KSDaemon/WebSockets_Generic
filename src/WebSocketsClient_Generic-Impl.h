@@ -52,7 +52,7 @@
 #ifndef WEBSOCKETS_CLIENT_GENERIC_IMPL_H_
 #define WEBSOCKETS_CLIENT_GENERIC_IMPL_H_
 
-#include "WebSockets_Generic.h"
+#include "WebSocketsClient_Generic.h"
 
 WebSocketsClient::WebSocketsClient() {
     _cbEvent             = NULL;

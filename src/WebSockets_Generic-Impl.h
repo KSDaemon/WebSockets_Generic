@@ -52,6 +52,8 @@
 #ifndef WEBSOCKETS_GENERIC_IMPL_H_
 #define WEBSOCKETS_GENERIC_IMPL_H_
 
+#include "WebSockets_Generic.h"
+
 #ifdef ESP8266
 #include <core_esp8266_features.h>
 #endif

@@ -52,6 +52,8 @@
 #ifndef WEBSOCKETS_SERVER_GENERIC_IMPL_H_
 #define WEBSOCKETS_SERVER_GENERIC_IMPL_H_
 
+#include "WebSocketsServer_Generic.h"
+
 WebSocketsServerCore::WebSocketsServerCore(const String &origin, const String &protocol) {
     _origin                 = origin;
     _protocol               = protocol;

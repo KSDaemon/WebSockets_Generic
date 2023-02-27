@@ -52,7 +52,7 @@
 #ifndef SOCKET_IO_CLIENT_GENERIC_IMPL_H_
 #define SOCKET_IO_CLIENT_GENERIC_IMPL_H_
 
-#include "WebSocketsClient_Generic.h"
+#include "SocketIOclient_Generic.h"
 
 SocketIOclient::SocketIOclient() {}
 
