@@ -110,7 +110,7 @@ void webSocketEvent(const WStype_t& type, uint8_t * payload, const size_t& lengt
     {
       alreadyConnected = true;
 
-      Serial.print("[WSc] Connected to url: ");
+      Serial.print("[WSc] Connected with WebSocket-Protocol:");
       Serial.println((char *) payload);
 
       String msg = "CONNECT\r\naccept-version:1.1,1.0\r\nheart-beat:10000,10000\r\n\r\n";

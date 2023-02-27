@@ -1426,7 +1426,7 @@ Connecting to WebSockets Server @ IP address: 192.168.2.140
 [WS] [WS-Client][handleHeader] - cExtensions: 
 [WS] [WS-Client][handleHeader] - cVersion: 13
 [WS] [WS-Client][handleHeader] - cSessionId: 
-[WSc] Connected to url: /
+[WSc] Connected with WebSocket-Protocol:/
 [WSc] get text: Connected
 
 ```
@@ -2941,7 +2941,7 @@ Connecting to WebSockets Server @ 192.168.2.30
 Connected to WebSockets Server @ IP address: 192.168.2.30
 ["From Async ESP8266_NODEMCU_ESP12E",{"now":2070}]
 [WS] [WS-Client][connectedCb] Connected to Host:192.168.2.30, Port:8080
-[WSc] Connected to url: /
+[WSc] Connected with WebSocket-Protocol:/
 [WSc] get text: Connected
 [WSc] get ping
 ["From Async ESP8266_NODEMCU_ESP12E",{"now":32075}]

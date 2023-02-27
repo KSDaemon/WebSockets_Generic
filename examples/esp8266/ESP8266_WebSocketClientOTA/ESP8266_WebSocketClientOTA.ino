@@ -196,7 +196,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length)
     {
       alreadyConnected = true;
 
-      Serial.print("[WSc] Connected to url: ");
+      Serial.print("[WSc] Connected with WebSocket-Protocol:");
       Serial.println((char *) payload);
 
       // send message to server when Connected

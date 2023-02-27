@@ -61,7 +61,7 @@ void webSocketEvent(const WStype_t& type, uint8_t * payload, const size_t& lengt
       break;
 
     case WStype_CONNECTED:
-      Serial.printf("[WSc] Connected to url: %s\n", payload);
+      Serial.printf("[WSc] Connected with WebSocket-Protocol:%s\n", payload);
 
       // send message to server when Connected
       webSocket.sendTXT("Connected");

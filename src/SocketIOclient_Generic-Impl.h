@@ -257,7 +257,7 @@ void SocketIOclient::handleCbEvent(WStype_t type, uint8_t *payload, size_t lengt
             break;
 
         case WStype_CONNECTED: {
-            WS_LOGWARN2("[wsIOc] Connected to url:", (char *)payload);
+            WS_LOGWARN2("[wsIOc] Connected with WebSocket-Protocol:", (char *)payload);
 
             // send message to server when Connected
             // Engine.io upgrade confirmation message (required)
